@@ -5,29 +5,154 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
     <link rel="stylesheet" href="timetable.css"></link>
     <script>
+      var allShifts = ['morning', 'afternoon', 'random'];
 
       document.addEventListener('DOMContentLoaded', function() {
+        var draggableE1 = document.querySelector('.fc-event-draggable');
         var calendarEl = document.getElementById('calendar');
+
         var calendar = new FullCalendar.Calendar(calendarEl, {
+          editable: true,
+          droppable: true,
+          dragRevertDuration: 0,
+          slotDuration: '01:00:00',
+          slotMinTime: "06:00:00",
+          slotMaxTime: "18:00:00",
+
           initialView: 'resourceTimelineDay',
           resources: [
             {
-                "id": "1",
-                "title": "Dhruva"
+                id: "1",
+                title: "Dhruva",
+                extendedProps: {
+                  hours: '5',
+                  possibleShifts: ['morning', 'afternoon', 'random']
+                }
             },
             {
-                "id": "2",
-                "title": "Mark"
+                id: "2",
+                title: "Mark",
+                extendedProps: {
+                  hours: '0',
+                  possibleShifts: ['morning', 'random']
+                }
             }
-          ]
+          ],
+          resourceAreaColumns: [
+            {
+              field: 'title',
+              headerContent: 'Trooper'
+            },
+
+            {
+              headerContent: 'Hours',
+              cellContent: function(arg) {
+                var extendedProps = arg.resource.extendedProps;
+                var hours = extendedProps.hours
+                
+                var z = document.createElement('input');
+                z.value = hours
+                z.type = 'number'
+                z.style.width = '50px'
+                z.style.alignSelf = 'center'
+
+                let arrayOfDomNodes = [z];
+                return { domNodes: arrayOfDomNodes}
+              }
+            },
+
+            {
+              headerContent: 'Shift',
+              cellContent: function(arg) {
+                var extendedProps = arg.resource.extendedProps;
+                var possibleShifts = extendedProps.possibleShifts
+
+                // Create select object
+                var shiftSelect = document.createElement('select')
+
+                for (let index = 0; index < allShifts.length; index++) {
+                  var shift = allShifts[index];
+                  var shiftOption = document.createElement('option');
+                  shiftOption.text = shift;
+                  if (possibleShifts.includes(shift)) {
+                    shiftOption.disabled = false
+                  } else {
+                    shiftOption.disabled = true
+                  }
+                  shiftSelect.add(shiftOption)  
+                }
+
+                return {domNodes: [shiftSelect]}
+              }
+            }
+          ],
+          events: [
+            {
+              id: '1',
+              resourceId: '1',
+              title: 'sentry',
+              start: '2024-07-20 16:00',
+              end: '2024-07-20 17:00',
+            },
+
+            {
+              id: '1',
+              resourceId: '2',
+              title: 'sentry',
+              start: '2024-07-20 06:00',
+              end: '2024-07-20 09:00',
+            }
+          ],
+          
+          // For deleting
+          eventDragStop: function(e) {
+            let trashEl = document.querySelector('.fcTrash') //as HTMLElement;
+
+            let x1 = trashEl.offsetLeft;
+            let x2 = trashEl.offsetLeft + trashEl.offsetWidth;
+            let y1 = trashEl.offsetTop;
+            let y2 = trashEl.offsetTop + trashEl.offsetHeight;
+
+            if (e.jsEvent.pageX >= x1 && e.jsEvent.pageX <= x2 &&
+                e.jsEvent.pageY >= y1 && e.jsEvent.pageY <= y2) {
+                    e.event.dragRevertDuration = 0;
+                    e.event.remove();
+            }
+        }
+
+
+
         });
         calendar.render();
-      });
 
+        let draggable = new FullCalendar.Draggable(draggableE1, {
+          eventData: {
+            title: 'my event',
+            duration: '02:00',
+            color: 'purple'
+          }
+        });
+
+        function printEvents() {
+          var events = calendar.getEvents();
+          for (let index = 0; index < events.length; index++) {
+            const event = events[index];
+            var resources = event.getResources();
+            var resourceIds = resources.map(function(resource) { return resource.id });
+            
+            console.log(event.title, event.start, event.end, resourceIds);
+          }
+        }
+        
+        document.querySelector('.bingle').onclick = printEvents
+      });
     </script>
   </head>
   <body>
+    <div class="fcTrash">Trash icon</div>
     <div id='calendar'></div>
     <div class="fc-daygrid-event fc-daygrid-block-event fc-h-event fc-event fc-event-draggable">Event 1</div>
   </body>
+  <button class="bingle">Testing purpose</button>
+
 </html>
