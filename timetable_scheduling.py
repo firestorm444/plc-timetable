@@ -982,20 +982,6 @@ def create_excel(all_troopers, timetable, duty_timings, today=datetime.date.toda
     workbook.close()
 
 
-
-
-### WEB TRIAL
-
-
-
-
-
-
-
-
-
-
-
 def main():
     # INITIALISING VARIABLES
     duty_timings = [time(x) for x in range(6, 18)]
@@ -1015,12 +1001,6 @@ def main():
             'excuse_rmj': False,
             'present': True
         },
-
-        # 'jian jun': {
-        #     'type': 'combat',
-        #     'status': 'stay-in',
-        #     'present': True
-        # },
 
         'kah fai': {
             'type': 'combat',

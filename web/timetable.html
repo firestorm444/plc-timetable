@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <script type="text/javascript" src="/eel.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
+    <script type="text/javascript" src="multi-step-form.js"></script>
+    <script src="https://kit.fontawesome.com/ddf9b074ad.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="timetable.css"></link>
+    <script>
+      var allShifts = ['morning', 'afternoon', 'random'];
+      var selectAndDragEvents = null;
+      var selectAndDragStart, selectAndDragEnd
+      var timetableDate = new Date();
+      timetableDate.setDate(timetableDate.getDate() + 1)
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        // Manage calendar history
+        var undoStack = [];
+        var redoStack = [];
+        var undoTwice = false;
+
+        function undo() {
+          if (undoStack.length == 1) {
+            return undoStack[0]
+          }
+          let element = undoStack.pop();
+          redoStack.push(element);
+          undoTwice = false;
+          return element
+        }
+
+        function redo() {
+          if (redoStack.length == 1) {
+            return redoStack[0]
+          }
+          let element = redoStack.pop();
+          undoStack.push(element)
+          undoTwice = false
+          return element
+        }
+
+
+        var draggableE1 = document.querySelector('.fc-event-draggable');
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+          editable: true,
+          droppable: true,
+          selectable: true,
+          dragRevertDuration: 0,
+          slotDuration: '01:00:00',
+          slotMinTime: "06:00:00",
+          slotMaxTime: "18:00:00",
+          eventTextColor: "black",
+          height: "auto",
+          initialDate: timetableDate,
+
+          select: function (info) {
+            function selectCheck(event) {
+              return event.start >= selectAndDragStart && event.end <= selectAndDragEnd && event.getResources()[0].id == resourceId
+            }
+
+            // If already selected, cancel previous selection by removing all previous selections
+            if (selectAndDragEvents !== null) {
+              calendar.getEvents().forEach(event => {
+                event.setProp('groupId', '');
+              });
+              selectAndDragEvents = null
+            }
+
+            selectAndDragStart = info.start;
+            selectAndDragEnd = info.end;
+
+            const resourceId = info.resource.id
+            selectAndDragEvents = calendar.getEvents().filter(selectCheck);
+            for (let index = 0; index < selectAndDragEvents.length; index++) {
+              const event = selectAndDragEvents[index];
+              event.setProp("groupId", "1");
+              // console.log(event.start, event.end, event.getResources()[0].title, event.title)
+              
+            }
+          },
+
+          
+          // eventDrop: function (eventDropInfo) {
+          //   console.log(selectAndDragEvents);
+          //   if (selectAndDragEvents !== null) {
+          //     selectAndDragEvents.forEach(event => {
+          //       event.setProp("groupId", '')
+          //     });
+          //     selectAndDragEvents = null
+          //   }
+          // },
+
+
+          initialView: 'resourceTimelineDay',
+          resources: await eel.convert_troopers_to_calendar_resources()(),
+          // Format example
+          // resources: [
+          //   {
+          //       id: "1",
+          //       title: "Dhruva",
+          //       extendedProps: {
+          //         hours: '5',
+          //         possibleShifts: ['morning', 'afternoon', 'random']
+          //       }
+          //   },
+          //   {
+          //       id: "2",
+          //       title: "Mark",
+          //       extendedProps: {
+          //         hours: '0',
+          //         possibleShifts: ['morning', 'random']
+          //       }
+          //   }
+          // ],
+          resourceAreaColumns: [
+            {
+              field: 'title',
+              headerContent: 'Trooper'
+            },
+
+            {
+              headerContent: 'Hours',
+              cellContent: function(arg) {
+                var extendedProps = arg.resource.extendedProps;
+                var hours = extendedProps.hours
+                
+                var z = document.createElement('input');
+                z.value = hours
+                z.type = 'number'
+                z.style.width = '50px'
+                z.style.alignSelf = 'center'
+
+                let arrayOfDomNodes = [z];
+                return { domNodes: arrayOfDomNodes}
+              }
+            },
+
+            {
+              headerContent: 'Shift',
+              cellContent: function(arg) {
+                var extendedProps = arg.resource.extendedProps;
+                var possibleShifts = extendedProps.possibleShifts
+
+                // Create select object
+                var shiftSelect = document.createElement('select')
+
+                for (let index = 0; index < allShifts.length; index++) {
+                  var shift = allShifts[index];
+                  var shiftOption = document.createElement('option');
+                  shiftOption.text = shift;
+                  if (possibleShifts.includes(shift)) {
+                    shiftOption.disabled = false
+                  } else {
+                    shiftOption.disabled = true
+                  }
+                  shiftSelect.add(shiftOption)  
+                }
+
+                return {domNodes: [shiftSelect]}
+              }
+            }
+          ],
+          events: await eel.convert_timetable_to_calendar_events()(),
+          // events: [
+          //   {
+          //     resourceId: '1',
+          //     title: 'sentry',
+          //     start: '2024-07-20 16:00',
+          //     end: '2024-07-20 17:00',
+          //   },
+
+          //   {
+          //     // id: '1',
+          //     resourceId: '2',
+          //     title: 'sentry',
+          //     start: '2024-07-20 06:00',
+          //     end: '2024-07-20 09:00',
+          //   }
+          // ],
+          
+          // eventDragStart: function (info) {
+          //   alert('1')
+          //   // console.log(undoStack, redoStack)
+          //   // undoStack.push(calendar.getEvents());
+          // },
+
+          eventDrop: function(info) {
+            // If events have been selected and dragged (multi select, drag and drop)
+            if (selectAndDragEvents !== null) {
+              function selectCheck(event) {
+                return event.start >= selectAndDragStart && event.end <= selectAndDragEnd && event.getResources()[0].id == newResourceId
+              }
+
+              function checkEventInDraggedEvents(event, draggedEvents) {
+                  for (let j = 0; j < draggedEvents.length; j++) {
+                    const draggedEvent = draggedEvents[j];
+                    if (draggedEvent.title == event.title && draggedEvent.startStr == event.startStr && draggedEvent.endStr == event.endStr) {
+                      return true
+                    }
+                  }
+                  return false
+              }
+
+              const newResourceId = info.newResource.id;
+              const oldResourceId = info.oldResource.id;
+              const allEventsInTimeslot = calendar.getEvents().filter(selectCheck);
+              const eventsToSwap = [];
+
+              // Workaround since you cannot directly compare event objects
+              for (let index = 0; index < allEventsInTimeslot.length; index++) {
+                const event = allEventsInTimeslot[index];
+                // console.log(draggedEvent.title, draggedEvent.start, draggedEvent.end)
+                if (!checkEventInDraggedEvents(event, selectAndDragEvents)) {
+                  eventsToSwap.push(event)
+                } 
+              }
+
+              // console.log(selectAndDragEvents, allEventsInTimeslot, eventsToSwap);
+
+              selectAndDragEvents.forEach(event => {
+                event.setProp("groupId", '')
+              });
+              selectAndDragEvents = null
+              
+              eventsToSwap.forEach(event => {
+                event.setResources([oldResourceId]);
+              });
+
+            }
+            
+            // Otherwise do singular event drag and drop
+            else if (info.newResource !== null){
+              const newEvent = info.event;
+              const eventToSwap = calendar.getEvents()
+                .filter(event => newEvent.startStr == event.startStr && newEvent.endStr == event.endStr && info.newResource.id == event.getResources()[0].id && info.oldEvent.title !== event.title)[0];
+              
+              // swap the event if it exists
+              if (eventToSwap !== undefined) {
+                eventToSwap.setResources([info.oldResource.id]);
+              }
+              
+            }
+
+            undoStack.push(calendar.getEvents())
+            undoTwice = true;
+            console.log(undoStack, redoStack);
+
+            // document.addEventListener('keydown', function(event) {
+            //   if (event.ctrlKey && event.key === 'z') {
+            //     info.revert();
+            //   }
+            // });
+
+            
+          },
+          eventDragStop: function(e) {
+            // Drag to delete icon
+            let trashEl = document.querySelector('.fcTrash') //as HTMLElement;
+
+            let x1 = trashEl.offsetLeft;
+            let x2 = trashEl.offsetLeft + trashEl.offsetWidth;
+            let y1 = trashEl.offsetTop;
+            let y2 = trashEl.offsetTop + trashEl.offsetHeight;
+
+            if (e.jsEvent.pageX >= x1 && e.jsEvent.pageX <= x2 &&
+                e.jsEvent.pageY >= y1 && e.jsEvent.pageY <= y2) {
+                    e.event.dragRevertDuration = 0;
+                    e.event.remove();
+            }
+            
+            // // For event drag and drop
+            // if (selectAndDragEvents !== null) {
+            //   const allEvents = calendar.getEvents().filter
+            //   selectAndDragEvents.forEach(event => {
+            //     console.log(event.title)
+            //     event.setProp("groupId", '')
+            //   });
+            //   selectAndDragEvents = null
+            // }
+        }
+        });
+        calendar.render();
+
+        undoStack.push(calendar.getEvents());
+        console.log(undoStack, redoStack);
+        
+        document.addEventListener('keydown', function(event) {
+          if (event.ctrlKey && event.key === 'z') {
+            let allEvents = calendar.getEvents();
+            
+
+            calendar.batchRendering(function () {
+              allEvents.forEach(event => {
+                event.remove()
+              });
+              
+              if (undoTwice) {
+                undo()
+              }
+              const previousState = undo();
+              previousState.forEach(event => {
+                calendar.addEvent(event)
+              });
+            })
+            console.log(undoStack, redoStack);
+          }
+        });
+
+
+        document.addEventListener('keydown', function(event) {
+          if (event.ctrlKey && event.key === 'y') {
+            let allEvents = calendar.getEvents();
+            
+            calendar.batchRendering(function() {
+              allEvents.forEach(event => {
+                event.remove()
+              });
+            
+              const previousState = redo();
+              previousState.forEach(event => {
+                calendar.addEvent(event)
+              });
+            })
+          }
+        });
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        let draggable = new FullCalendar.Draggable(draggableE1, {
+          eventData: {
+            title: 'my event',
+            duration: '02:00',
+            color: 'purple'
+          }
+        });
+
+        function printEvents() {
+          var events = calendar.getEvents();
+          for (let index = 0; index < events.length; index++) {
+            const event = events[index];
+            var resources = event.getResources();
+            var resourceIds = resources.map(function(resource) { return resource.id });
+            
+            console.log(event.title, event.start, event.end, resourceIds);
+          }
+        }
+        
+        document.querySelector('.bingle').onclick = printEvents
+      });
+    </script>
+  </head>
+  <body>
+    <div class="fcTrash">Trash icon</div>
+    <div id='calendar'></div>
+    <div class="fc-daygrid-event fc-daygrid-block-event fc-h-event fc-event fc-event-draggable">Event 1</div>
+  </body>
+  <button class="bingle">Testing purpose</button>
+
+  <!-- TRIAL OF MULTI STEP FORM -->
+  <!-- https://codepen.io/isaiaphiliph/pen/RwppXKG -->
+  <div class="container">
+    <div class="progress-bar">
+      <div class="step">
+        <p>Sentry</p>
+        <div class="bullet">
+          <span>1</span>
+        </div>
+        <div class="check fas fa-check"></div>
+      </div>
+      <div class="step">
+        <p>Custom</p>
+        <div class="bullet">
+          <span>2</span>
+        </div>
+        <div class="check fas fa-check"></div>
+      </div>
+      <div class="step">
+        <p>Shift</p>
+        <div class="bullet">
+          <span>3</span>
+        </div>
+        <div class="check fas fa-check"></div>
+      </div>
+      <div class="step">
+        <p>Duties</p>
+        <div class="bullet">
+          <span>4</span>
+        </div>
+        <div class="check fas fa-check"></div>
+      </div>
+      <div class="step">
+        <p>Export</p>
+        <div class="bullet">
+          <span>5</span>
+        </div>
+        <div class="check fas fa-check"></div>
+      </div>
+    </div>
+
+    <div class="form-outer">
+      <form action="#">
+          <div class="page slide-page">
+              <div class="title">Basic Info:</div>
+              <div class="field">
+                  <div class="label">First Name</div>
+                  <input type="text" />
+              </div>
+              <div class="field">
+                  <div class="label">Last Name</div>
+                  <input type="text" />
+              </div>
+              <div class="field">
+                  <button class="firstNext next">Next</button>
+              </div>
+          </div>
+
+          <div class="page">
+              <div class="title">Contact Info:</div>
+              <div class="field">
+                  <div class="label">Email Address</div>
+                  <input type="text" />
+              </div>
+              <div class="field">
+                  <div class="label">Phone Number</div>
+                  <input type="Number" />
+              </div>
+              <div class="field btns">
+                  <button class="prev-1 prev">Previous</button>
+                  <button class="next-1 next">Next</button>
+              </div>
+          </div>
+          <div class="page">
+              <div class="title">Contact Info 2:</div>
+              <div class="field">
+                  <div class="label">Email Address</div>
+                  <input type="text"  />
+              </div>
+              <div class="field">
+                  <div class="label">Phone Number</div>
+                  <input type="Number"  />
+              </div>
+              <div class="field btns">
+                  <button class="prev-2 prev">Previous</button>
+                  <button class="next-2 next">Next</button>
+              </div>
+          </div>
+          <div class="page">
+              <div class="title">Contact Info 3:</div>
+              <div class="field">
+                  <div class="label">Email Address</div>
+                  <input type="text"  />
+              </div>
+              <div class="field">
+                  <div class="label">Phone Number</div>
+                  <input type="Number"  />
+              </div>
+              <div class="field btns">
+                  <button class="prev-3 prev">Previous</button>
+                  <button class="next-3 next">Next</button>
+              </div>
+          </div>
+
+          <div class="page">
+              <div class="title">Date of Birth:</div>
+              <div class="field">
+                  <div class="label">Date</div>
+                  <input type="text"  />
+              </div>
+              <div class="field">
+                  <div class="label">Gender</div>
+                  <select required>
+                      <option>Male</option>
+                      <option>Female</option>
+                      <option>Other</option>
+                  </select>
+              </div>
+              <div class="field btns">
+                  <button class="prev-4 prev">Previous</button>
+                  <button class="next-4 next">Next</button>
+              </div>
+          </div>
+
+          <div class="page">
+              <div class="title">Login Details:</div>
+              <div class="field">
+                  <div class="label">Username</div>
+                  <input type="text"  />
+              </div>
+              <div class="field">
+                  <div class="label">Password</div>
+                  <input type="password"  />
+              </div>
+              <div class="field btns">
+                  <button class="prev-5 prev">Previous</button>
+                  <button class="submit">Submit</button>
+              </div>
+          </div>
+      </form>
+    </div>
+
+  </div>
+
+</html>
