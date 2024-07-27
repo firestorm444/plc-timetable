@@ -21,8 +21,8 @@ body {
     --primary: #333;
     --secondary: #333;
     --errorColor: red;
-    --stepNumber: 6;
-    --containerWidth: 600px;
+    --stepNumber: 5;
+    --containerWidth: 100%;
     --bgColor: #333;
     --inputBorderColor: lightgray;
 }
@@ -36,13 +36,12 @@ body {
     background: #fff;
     text-align: center;
     border-radius: 5px;
-    padding: 50px 35px 10px 35px;
+    align-items: center;
+    justify-content: center;
+    /* padding: 50px 35px 10px 35px; */
 }
-.container header {
-    font-size: 35px;
-    font-weight: 600;
-    margin: 0 0 30px 0;
-}
+
+/* TODO: merge form into form-outer */
 .container .form-outer {
     width: 100%;
     overflow: hidden;
@@ -51,28 +50,31 @@ body {
     display: flex;
     width: calc(100% * var(--stepNumber));
 }
-.form-outer form .page {
+
+.page {
     width: calc(100% / var(--stepNumber));
     transition: margin-left 0.3s ease-in-out;
 }
-.form-outer form .page .title {
+
+.page .title {
     text-align: left;
     font-size: 25px;
     font-weight: 500;
 }
-.form-outer form .page .field {
+.page .field {
     width: var(--containerWidth);
     height: 45px;
     margin: 45px 0;
     display: flex;
     position: relative;
 }
-form .page .field .label {
+
+.page .field .label {
     position: absolute;
     top: -30px;
     font-weight: 500;
 }
-form .page .field input {
+.page .field input {
     box-sizing: border-box;
     height: 100%;
     width: 100%;
@@ -83,16 +85,16 @@ form .page .field input {
     font-size: 18px;
     transition: border-color 150ms ease;
 }
-form .page .field input.invalid-input {
+.page .field input.invalid-input {
     border-color: var(--errorColor);
 }
-form .page .field select {
+.page .field select {
     width: 100%;
     padding-left: 10px;
     font-size: 17px;
     font-weight: 500;
 }
-form .page .field button {
+.page .field button {
     width: 100%;
     height: calc(100% + 5px);
     border: none;
@@ -107,34 +109,30 @@ form .page .field button {
     text-transform: uppercase;
     transition: 0.5s ease;
 }
-form .page .field button:hover {
+.page .field button:hover {
     background: #000;
 }
 form .page .btns button {
     margin-top: -20px !important;
-}
-form .page .btns button.prev {
     margin-right: 3px;
-    font-size: 17px;
 }
-form .page .btns button.next {
-    margin-left: 3px;
-}
-.container .progress-bar {
+
+.progress-bar {
     display: flex;
-    margin: 40px 0;
+    margin: 17px 0;
     user-select: none;
 }
-.container .progress-bar .step {
+.progress-bar .step {
     text-align: center;
     width: 100%;
     position: relative;
 }
-.container .progress-bar .step p {
+.progress-bar .step p {
     font-weight: 500;
     font-size: 18px;
     color: #000;
-    margin-bottom: 8px;
+    margin: 8px 0;
+
 }
 .progress-bar .step .bullet {
     height: 25px;
@@ -165,16 +163,16 @@ form .page .btns button.next {
     position: absolute;
     content: "";
     bottom: 11px;
-    right: -51px;
+    left: 35px;
     height: 3px;
-    width: 44px;
+    width: 90px;
     background: #262626;
 }
 .progress-bar .step .bullet.active:after {
     background: var(--primary);
     transform: scaleX(0);
     transform-origin: left;
-    animation: animate 0.3s linear forwards;
+    animation: animate 1s linear forwards;
 }
 @keyframes animate {
     100% {
@@ -187,12 +185,12 @@ form .page .btns button.next {
 }
 .progress-bar .step p.active {
     color: var(--primary);
-    transition: 0.2s linear;
+    transition: 1s linear;
 }
 .progress-bar .step .check {
     position: absolute;
     left: 50%;
-    top: 70%;
+    top: 77%;
     font-size: 15px;
     transform: translate(-50%, -50%);
     display: none;

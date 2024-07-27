@@ -57,6 +57,12 @@
           height: "auto",
           initialDate: timetableDate,
 
+          headerToolbar: {
+            start: 'title',
+            center: '',
+            end: ''
+          },
+
           select: function (info) {
             function selectCheck(event) {
               return event.start >= selectAndDragStart && event.end <= selectAndDragEnd && event.getResources()[0].id == resourceId
@@ -131,7 +137,7 @@
                 var z = document.createElement('input');
                 z.value = hours
                 z.type = 'number'
-                z.style.width = '50px'
+                z.style.width = '40px'
                 z.style.alignSelf = 'center'
 
                 let arrayOfDomNodes = [z];
@@ -328,27 +334,6 @@
           }
         });
 
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         let draggable = new FullCalendar.Draggable(draggableE1, {
           eventData: {
             title: 'my event',
@@ -368,20 +353,18 @@
           }
         }
         
+        // Add trash icon to the right end of the header toolbar
+        const locationForIcon = document.querySelector(".fc-header-toolbar > .fc-toolbar-chunk:nth-child(3)");
+        const trash = document.createElement('div');
+        trash.classList.add('fcTrash');
+        trash.innerHTML = '<i class="fas fa-trash fa-2x" style="color: red"></i>';
+        locationForIcon.appendChild(trash);
+
         document.querySelector('.bingle').onclick = printEvents
       });
     </script>
   </head>
   <body>
-    <div class="fcTrash">Trash icon</div>
-    <div id='calendar'></div>
-    <div class="fc-daygrid-event fc-daygrid-block-event fc-h-event fc-event fc-event-draggable">Event 1</div>
-  </body>
-  <button class="bingle">Testing purpose</button>
-
-  <!-- TRIAL OF MULTI STEP FORM -->
-  <!-- https://codepen.io/isaiaphiliph/pen/RwppXKG -->
-  <div class="container">
     <div class="progress-bar">
       <div class="step">
         <p>Sentry</p>
@@ -398,105 +381,107 @@
         <div class="check fas fa-check"></div>
       </div>
       <div class="step">
-        <p>Shift</p>
+        <p>Confirm</p>
         <div class="bullet">
           <span>3</span>
         </div>
         <div class="check fas fa-check"></div>
       </div>
       <div class="step">
-        <p>Duties</p>
+        <p>Shifts</p>
         <div class="bullet">
           <span>4</span>
         </div>
         <div class="check fas fa-check"></div>
       </div>
       <div class="step">
-        <p>Export</p>
+        <p>Duties</p>
         <div class="bullet">
           <span>5</span>
         </div>
         <div class="check fas fa-check"></div>
       </div>
+      <div class="step">
+        <p>Export</p>
+        <div class="bullet">
+          <span>6</span>
+        </div>
+        <div class="check fas fa-check"></div>
+      </div>
     </div>
+    <div id='calendar'></div>
+    <div class="fc-daygrid-event fc-daygrid-block-event fc-h-event fc-event fc-event-draggable">Event 1</div>
+  </body>
+  <button class="bingle">Testing purpose</button>
 
+  <!-- TRIAL OF MULTI STEP FORM -->
+  <!-- https://codepen.io/isaiaphiliph/pen/RwppXKG -->
+  <div class="container">
     <div class="form-outer">
       <form action="#">
           <div class="page slide-page">
-              <div class="title">Basic Info:</div>
+              <div class="title">PLC Timetable</div>
+              <p>Generate a customised timetable in just a few steps! 
+                Click the generate sentry button to begin
+              </p>
               <div class="field">
-                  <div class="label">First Name</div>
-                  <input type="text" />
-              </div>
-              <div class="field">
-                  <div class="label">Last Name</div>
-                  <input type="text" />
-              </div>
-              <div class="field">
-                  <button class="firstNext next">Next</button>
+                  <button class="firstNext next">Generate Sentry</button>
               </div>
           </div>
 
           <div class="page">
-              <div class="title">Contact Info:</div>
-              <div class="field">
-                  <div class="label">Email Address</div>
-                  <input type="text" />
-              </div>
-              <div class="field">
-                  <div class="label">Phone Number</div>
-                  <input type="Number" />
-              </div>
+              <div class="title">Input Custom Duties</div>
+              <p>Add any custom duties into the calendar</p>
               <div class="field btns">
                   <button class="prev-1 prev">Previous</button>
-                  <button class="next-1 next">Next</button>
+                  <button class="next-1 next">Confirm Duties</button>
               </div>
           </div>
           <div class="page">
-              <div class="title">Contact Info 2:</div>
-              <div class="field">
-                  <div class="label">Email Address</div>
-                  <input type="text"  />
-              </div>
-              <div class="field">
-                  <div class="label">Phone Number</div>
-                  <input type="Number"  />
-              </div>
+              <div class="title">Confirm Shifts and Hours</div>
+              <p>Check and confirm the autogenerated allocated shifts and hours for each trooper on the calendar
+              </p>
               <div class="field btns">
                   <button class="prev-2 prev">Previous</button>
-                  <button class="next-2 next">Next</button>
+                  <button class="next-2 next">Confirm</button>
               </div>
           </div>
           <div class="page">
-              <div class="title">Contact Info 3:</div>
-              <div class="field">
-                  <div class="label">Email Address</div>
-                  <input type="text"  />
-              </div>
-              <div class="field">
-                  <div class="label">Phone Number</div>
-                  <input type="Number"  />
-              </div>
+              <div class="title">Confirm Shift Blocks</div>
+              <p>Modify and confirm the autogenerated duty timeslots for each trooper</p>
               <div class="field btns">
                   <button class="prev-3 prev">Previous</button>
-                  <button class="next-3 next">Next</button>
+                  <button class="next-3 next">Confirm timeslots</button>
               </div>
           </div>
 
           <div class="page">
-              <div class="title">Date of Birth:</div>
+              <div class="title">Confirm Duties</div>
+              <p>Modify and confirm the autogenerated duties for each trooper and the miscellaneous roles below.</p>
               <div class="field">
-                  <div class="label">Date</div>
-                  <input type="text"  />
-              </div>
-              <div class="field">
-                  <div class="label">Gender</div>
+                  <div class="label">Breakfast</div>
                   <select required>
                       <option>Male</option>
                       <option>Female</option>
                       <option>Other</option>
                   </select>
               </div>
+              <div class="field">
+                <div class="label">Dinner</div>
+                <select required>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="field">
+              <div class="label">Last Ensurer</div>
+              <select required>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+              </select>
+          </div>
               <div class="field btns">
                   <button class="prev-4 prev">Previous</button>
                   <button class="next-4 next">Next</button>
@@ -504,14 +489,10 @@
           </div>
 
           <div class="page">
-              <div class="title">Login Details:</div>
+              <div class="title">Export Timetable</div>
               <div class="field">
-                  <div class="label">Username</div>
-                  <input type="text"  />
-              </div>
-              <div class="field">
-                  <div class="label">Password</div>
-                  <input type="password"  />
+                  <div class="label">Export URL</div>
+                  <input type="text"/>
               </div>
               <div class="field btns">
                   <button class="prev-5 prev">Previous</button>

@@ -39,6 +39,7 @@ function initMultiStepForm() {
                 progressCheck[current - 1].classList.add("active");
                 progressText[current - 1].classList.add("active");
                 current += 1;
+                window.scrollTo(0,0);
             }
         });
     }
