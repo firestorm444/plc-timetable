@@ -152,7 +152,6 @@ def find_all_available_shifts(timetable, duty_timings, troopers, min_hours=5):
     #All troopers can have random shifts (shifts that dont follow a pattern)
     available_shifts = {}
     for trooper_name in trooper_names:
-        print(trooper_name, len([duty for duty in timetable if duty is None]))
         # if the trooper is stayout and there is no pre assigned slots for the trooper, confirm should have afternoon shift
         if troopers[trooper_name]['status'] == 'stay-out' and len([duty for duty in timetable if duty is None]) == 0:
             available_shifts[trooper_name] = []
@@ -203,7 +202,21 @@ def find_all_available_shifts(timetable, duty_timings, troopers, min_hours=5):
     return available_shifts
 
 
-def select_shifts(possible_shifts, troopers, shift_blocks):
+def determine_shift_distribution(troopers):
+    if len(troopers) == 10:
+        num_morning, num_afternoon, num_random = 4, 3, 3
+    elif len(troopers) == 11:
+        num_morning, num_afternoon, num_random = 4, 4, 3
+    elif len(troopers) == 12:
+        num_morning, num_afternoon, num_random = 4, 5, 3
+    elif len(troopers) >= 13:
+        num_morning, num_afternoon = 5, 5
+        num_random = len(troopers) - 10
+    
+    return num_morning, num_afternoon, num_random
+
+
+def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
     final_shifts = {
         'morning': set(),
         'afternoon': set(),
@@ -225,15 +238,7 @@ def select_shifts(possible_shifts, troopers, shift_blocks):
             else:
                 shift_dict[shift].add(trooper_name)
     
-    if len(troopers) == 10:
-        num_morning, num_afternoon, num_random = 4, 3, 3
-    elif len(troopers) == 11:
-        num_morning, num_afternoon, num_random = 4, 4, 3
-    elif len(troopers) == 12:
-        num_morning, num_afternoon, num_random = 4, 5, 3
-    elif len(troopers) >= 13:
-        num_morning, num_afternoon = 5, 5
-        num_random = len(troopers) - 10
+    num_morning, num_afternoon, num_random = shift_distribution
     
     unique_morning = shift_dict['morning'] - shift_dict['afternoon'] - final_shifts['morning']
     unique_afternoon = shift_dict['afternoon'] - shift_dict['morning'] - final_shifts['afternoon']
@@ -1214,7 +1219,8 @@ def main():
     available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
     # pprint.pprint(available_shifts)
 
-    allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks)
+    shift_distribution = determine_shift_distribution(troopers)
+    allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
     pprint.pprint(allocated_shifts)
 
     # allocated_shifts = json.loads(input('Enter the finalised shifts'))

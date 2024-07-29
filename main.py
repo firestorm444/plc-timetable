@@ -1,4 +1,5 @@
 from timetable_scheduling import *
+from dateutil import parser
 
 # INITIALISING VARIABLES
 duty_timings = [time(x) for x in range(6, 18)]
@@ -161,6 +162,17 @@ roles = {
     }
 }
 
+roles_placeholders = {
+    "None": {
+        'color': 'grey',
+        'name': 'nil'
+    },
+    "TODO": {
+        'color': '#2E8857',
+        'name': 'duty'
+    }
+}
+
 shift_blocks = {
     'morning': [time(6), time(13)],
     # 'late-morning': [time(8), time(14)],
@@ -169,16 +181,21 @@ shift_blocks = {
 
 timetable_date = datetime.date.today() + datetime.timedelta(days=1)
 
+default_shift_distribution = determine_shift_distribution(troopers)
+shift_distribution = default_shift_distribution
+
 # GENERATE EMPTY TIMETABLE
 timetable = {}
 for trooper in troopers:
     timetable[trooper] = ['' for j in range(len(duty_timings))]
 
 
+
+
 assign_sentry_duty(troopers, timetable, roles)
 timetable['hilmi'][0:6] = ['desk', 'desk', 'out', 'x-ray', 'out', 'desk']
 available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
-allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks)
+allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
 print(generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles))
 add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
 or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
@@ -205,6 +222,22 @@ def convert_troopers_to_calendar_resources():
     
     return calendar_resources
 
+@eel.expose
+def get_default_parameters():
+    shift_block_iso = {}
+    for key, timings in shift_blocks.items():
+        shift_block_iso[key] = [timing.strftime('%H:%M:%S') for timing in timings]
+    
+    combined_roles = roles
+    for key, value in roles_placeholders.items():
+        combined_roles[key] = value
+    
+    return {
+        'roles': combined_roles,
+        'shift_blocks': shift_block_iso,
+        'shift_distribution': default_shift_distribution,
+        'timetable_date': timetable_date.isoformat()
+    }
 
 
 @eel.expose
@@ -247,9 +280,17 @@ def convert_timetable_to_calendar_events():
     
     return events
 
-        
+# Example of sending info back and forth from javascript to python
+@eel.expose        
+def print_n(eventsJson):
+    print(1)
+    # Use this method to parse the date string given
+    print([parser.parse(event['start']) for event in eventsJson])
 
+    return '123234235432534534'
 
+eel.getCalendarEvents()(print_n)
 # print(convert_timetable_to_calendar_events())
 eel.start('timetable.html')
+
 
