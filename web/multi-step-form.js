@@ -382,7 +382,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log(returnVal);
     }
 
+
     // SETTING UP OF FORM FOR SENDING DATA BACK AND FORTH
+
     function initMultiStepForm() {
         const progressNumber = document.querySelectorAll(".step").length;
         const slidePage = document.querySelector(".slide-page");
@@ -394,6 +396,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         const nextButtons = document.querySelectorAll(".next");
         const prevButtons = document.querySelectorAll(".prev");
         const stepsNumber = pages.length;
+        const successElement = document.querySelector('.success-msg');
+        const errorElement = document.querySelector('.error-msg');
     
         if (progressNumber !== stepsNumber) {
             console.warn(
@@ -407,28 +411,52 @@ document.addEventListener('DOMContentLoaded', async function() {
     
         for (let i = 0; i < nextButtons.length; i++) {
             nextButtons[i].addEventListener("click", async function (event) {
+                
+                function onDataSuccess(newEvents) {
+                    setNewCalendarEvents(newEvents);
+                    // Add new events to stepHistoryStack
+                    stepHistoryStack.push(newEvents)
+                    console.log(stepHistoryStack);
+            
+                    slidePage.style.marginLeft = `-${
+                        (100 / stepsNumber) * current
+                    }%`;
+                    bullet[current - 1].classList.add("active");
+                    progressCheck[current - 1].classList.add("active");
+                    progressText[current - 1].classList.add("active");
+                    current += 1;
+                    window.scrollTo(0,0);
+                }
+
+                function displayFlashMessage(type, errorMessage=null) {
+                    if (type=="success") {
+                        successElement.classList.remove('hidden');
+                        errorElement.classList.add('hidden')
+                    } else {
+                        errorElement.classList.remove('hidden');
+                        successElement.classList.add('hidden')
+                        errorElement.innerText = 
+                        `An error occurred when updating timetable: ${errorMessage}`
+                    }
+                }
+                
                 event.preventDefault();
     
                 // If generate sentry button is clicked:
                 if (i === 0) {
-                    // TODO: convert eventsJson to timetable
-                    var newEvents = await eel.generate_sentry_for_calendar()();
-                    setNewCalendarEvents(newEvents);
+                    try {
+                        var newEvents = await eel.generate_sentry_for_calendar()();
+                        onDataSuccess(newEvents)
+                        displayFlashMessage('success')
+                    } catch (error) {
+                        console.log(error);
+                        displayFlashMessage('error', error.errorText)
+                    }
                 }
 
-
-                // Add new events to stepHistoryStack
-                stepHistoryStack.push(newEvents)
-                console.log(stepHistoryStack);
-
-                slidePage.style.marginLeft = `-${
-                    (100 / stepsNumber) * current
-                }%`;
-                bullet[current - 1].classList.add("active");
-                progressCheck[current - 1].classList.add("active");
-                progressText[current - 1].classList.add("active");
-                current += 1;
-                window.scrollTo(0,0);
+                if (i === 1) {
+                    alert('gfhf');
+                }
                 
             });
         }
@@ -441,6 +469,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 stepHistoryStack.pop();
                 var previousEvents = stepHistoryStack[stepHistoryStack.length -1];
                 setNewCalendarEvents(previousEvents);
+                
+                // Reset the undo and redo stacks
+                undoStack = [previousEvents];
+                redoStack = []
+
+                // Remove the flash messages present
+                errorElement.classList.add('hidden');
+                successElement.classList.add('hidden');
 
                 slidePage.style.marginLeft = `-${
                     (100 / stepsNumber) * (current - 2)

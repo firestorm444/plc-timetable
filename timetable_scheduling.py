@@ -413,7 +413,7 @@ def get_vacant_roles_for_timeslot(timeslot, roles, duty_timings, timetable):
 
 
 
-def generate_duty_hours(troopers, timetable, duty_timings, shift_dict, roles):
+def generate_duty_hours(troopers, duty_timings, shift_dict, roles):
     '''
     Adds duty hours to each trooper in the troopers dict, with reference to the
     shift type. If the person is doing afternoon shift then give more hours to 
@@ -451,6 +451,7 @@ def generate_duty_hours(troopers, timetable, duty_timings, shift_dict, roles):
     for trooper in temp_troopers:
         troopers[trooper]['assigned_hours'] = hour_distribution[0][0]
 
+    return troopers
 
 
 def assign_sentry_duty(troopers, timetable, roles):
@@ -483,6 +484,7 @@ def assign_sentry_duty(troopers, timetable, roles):
                     # troopers[selected_trooper]['hours'] += 1
                     j += 1            
 
+    return timetable
 
 
 # class VarArraySolutionPrinter(cp_model.CpSolverSolutionCallback):
@@ -630,7 +632,7 @@ def or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_bl
                 if timetable_value == '' and optimal_value == 1:
                     timetable[trooper][t] = 'TODO'
             
-
+    return timetable
 
 def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_standing_index):
     num_troopers = len(troopers)
@@ -764,6 +766,8 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
             trooper_name = troopers_keys[assignment_tuple[0]]
             role_assigned = roles_keys[solver.value(role_index)]
             timetable[trooper_name][assignment_tuple[1]] = role_assigned
+
+    return timetable
         
 
 def add_allocated_shift_to_troopers_dict(allocated_shifts, troopers):
@@ -771,6 +775,7 @@ def add_allocated_shift_to_troopers_dict(allocated_shifts, troopers):
         for trooper_name in allocated_shifts[shift_name]:
             troopers[trooper_name]['shift'] = shift_name
 
+    return troopers
 
 def allocate_miscellaneous_roles(all_troopers, timetable):
     '''
@@ -987,7 +992,7 @@ def create_excel(all_troopers, timetable, duty_timings, today=datetime.date.toda
     workbook.close()
 
 
-def main():
+def main_scheduling():
     # INITIALISING VARIABLES
     duty_timings = [time(x) for x in range(6, 18)]
     all_troopers = {
@@ -1155,7 +1160,7 @@ def main():
     
     # previous_saved_state = deepcopy(timetable)
 
-    assign_sentry_duty(troopers, timetable, roles)
+    timetable = assign_sentry_duty(troopers, timetable, roles)
     print_timetable(timetable, duty_timings)
 
     # regenerate_sentry = input("\nRegenerate sentry? (y/n)")
@@ -1225,8 +1230,8 @@ def main():
 
     # allocated_shifts = json.loads(input('Enter the finalised shifts'))
 
-    print(generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles))
-    add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
+    troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles)
+    troopers = add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
 
     # troopers, allocated_shifts = or_tools_select_shifts(possible_shifts, troopers, shift_blocks)
     # pprint.pprint(allocated_shifts)
@@ -1240,10 +1245,10 @@ def main():
 
 
 
-    or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
+    timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
     print_timetable(timetable, duty_timings)
 
-    or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
+    timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
     print_timetable(timetable, duty_timings)
     # print(get_all_roles_for_timeslot(time(17), roles))
     # print(get_occupied_roles_for_timeslot(time(17), duty_timings, timetable))
@@ -1260,4 +1265,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_scheduling()

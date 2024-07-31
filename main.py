@@ -192,14 +192,14 @@ for trooper in troopers:
 
 
 # Sequence of generation:
-# assign_sentry_duty(troopers, timetable, roles)
+# timetable = assign_sentry_duty(troopers, blank_timetable, roles)
 # timetable['hilmi'][0:6] = ['desk', 'desk', 'out', 'x-ray', 'out', 'desk']
 # available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
 # allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
-# print(generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles))
-# add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
-# or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
-# or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
+# troopers = generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles)
+# troopers = add_allocated_shift_to_troopers_dict(allocated_shifts, troopers
+# timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
+# timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
 # print_timetable(timetable, duty_timings)
 
 import eel
@@ -243,9 +243,10 @@ def get_default_parameters():
 def convert_timetable_to_calendar_events(timetable):
     events = []
     trooper_index = 0
-    for trooper_name in timetable:
+    for trooper_name, value in timetable.items():
+        print(trooper_name, value)
         duty_index = 0
-        duties = blank_timetable[trooper_name]
+        duties = timetable[trooper_name]
         duties.append('')
         while duty_index <= len(duties) - 2:
             initial_duty_index = duty_index
@@ -270,7 +271,8 @@ def convert_timetable_to_calendar_events(timetable):
                     "end": final_datetime.isoformat(sep=' '),
                     "backgroundColor": roles[duty_name]['color'],
                 })
-                # print(trooper_name, trooper_index, duty_name, initial_datetime, final_datetime)
+
+                print(trooper_name, trooper_index, duty_name, initial_datetime, final_datetime)
             
             # Move to the next duty
             duty_index += 1
@@ -286,9 +288,9 @@ def get_timing_index(timing, duty_timings):
     
     return -1
 
-
 @eel.expose
-def convert_calendar_events_to_timetable(eventsJson, timetable=blank_timetable):
+def convert_calendar_events_to_timetable(eventsJson):
+    timetable = deepcopy(blank_timetable)
     trooper_keys = list(troopers.keys())
     for event in eventsJson:
         # Use this method to parse the date string given
@@ -313,14 +315,16 @@ def convert_calendar_events_to_timetable(eventsJson, timetable=blank_timetable):
         timetable[trooper_name][start_index: end_index+1] = [role_name for i in range(end_index-start_index+1)]
 
     
-    print_timetable(timetable, duty_timings)
-    print(blank_timetable)
+    # print_timetable(timetable, duty_timings)
+    # print(blank_timetable)
     return timetable
 
 
 @eel.expose
-def generate_sentry_for_calendar(timetable=blank_timetable):
-    assign_sentry_duty(troopers, timetable, roles)
+def generate_sentry_for_calendar():
+    # GENERATE EMPTY TIMETABLE
+    timetable = deepcopy(blank_timetable)
+    timetable = assign_sentry_duty(troopers, timetable, roles)
     return convert_timetable_to_calendar_events(timetable)
 
 
