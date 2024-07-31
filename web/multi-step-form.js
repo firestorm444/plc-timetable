@@ -1,122 +1,27 @@
-document.addEventListener("DOMContentLoaded", function () {
-    initMultiStepForm();
-})
-
-function initMultiStepForm() {
-    const progressNumber = document.querySelectorAll(".step").length;
-    const slidePage = document.querySelector(".slide-page");
-    const submitBtn = document.querySelector(".submit");
-    const progressText = document.querySelectorAll(".step p");
-    const progressCheck = document.querySelectorAll(".step .check");
-    const bullet = document.querySelectorAll(".step .bullet");
-    const pages = document.querySelectorAll(".page");
-    const nextButtons = document.querySelectorAll(".next");
-    const prevButtons = document.querySelectorAll(".prev");
-    const stepsNumber = pages.length;
-
-    if (progressNumber !== stepsNumber) {
-        console.warn(
-            "Error, number of steps in progress bar do not match number of pages"
-        );
-    }
-
-    document.documentElement.style.setProperty("--stepNumber", stepsNumber);
-
-    let current = 1;
-
-    for (let i = 0; i < nextButtons.length; i++) {
-        nextButtons[i].addEventListener("click", function (event) {
-            event.preventDefault();
-
-            // inputsValid = validateInputs(this);
-            inputsValid = true;
-
-            if (inputsValid) {
-                slidePage.style.marginLeft = `-${
-                    (100 / stepsNumber) * current
-                }%`;
-                bullet[current - 1].classList.add("active");
-                progressCheck[current - 1].classList.add("active");
-                progressText[current - 1].classList.add("active");
-                current += 1;
-                window.scrollTo(0,0);
-            }
-        });
-    }
-
-    for (let i = 0; i < prevButtons.length; i++) {
-        prevButtons[i].addEventListener("click", function (event) {
-            event.preventDefault();
-            slidePage.style.marginLeft = `-${
-                (100 / stepsNumber) * (current - 2)
-            }%`;
-            bullet[current - 2].classList.remove("active");
-            progressCheck[current - 2].classList.remove("active");
-            progressText[current - 2].classList.remove("active");
-            current -= 1;
-        });
-    }
-    // submitBtn.addEventListener("click", function () {
-    //     bullet[current - 1].classList.add("active");
-    //     progressCheck[current - 1].classList.add("active");
-    //     progressText[current - 1].classList.add("active");
-    //     current += 1;
-    //     setTimeout(function () {
-    //         alert("Your Form Successfully Signed up");
-    //         location.reload();
-    //     }, 800);
-    // });
-
-    function validateInputs(ths) {
-        let inputsValid = true;
-
-        const inputs =
-            ths.parentElement.parentElement.querySelectorAll("input");
-        for (let i = 0; i < inputs.length; i++) {
-            const valid = inputs[i].checkValidity();
-            if (!valid) {
-                inputsValid = false;
-                inputs[i].classList.add("invalid-input");
-            } else {
-                inputs[i].classList.remove("invalid-input");
-            }
-        }
-        return inputsValid;
-    }
-}
-
-
-
-
-// var allShifts = ['morning', 'afternoon', 'random'];
-// var selectAndDragEvents = null;
-// var selectAndDragStart, selectAndDragEnd;
-// var defaultParameters = await eel.get_default_parameters()();
-// var timetableDate = defaultParameters.timetable_date;
-// console.log(defaultParameters);
-
 // Default parameters to send:
 // roles, shift_blocks, num_morning, num_afternoon, num_random, timetable_date
-
-
 
 
 document.addEventListener('DOMContentLoaded', async function() {
     var allShifts = ['morning', 'afternoon', 'random'];
     var selectAndDragEvents = null;
     var selectAndDragStart, selectAndDragEnd
+
+    // Get default parameters from python and set the timetable date
     var defaultParameters = await eel.get_default_parameters()();
-    console.log(defaultParameters);
     var timetableDate = new Date(defaultParameters.timetable_date);
 
-    // Manage calendar history
+    // Manage calendar history - undo and redo
     var undoStack = [];
     var redoStack = [];
     var undoTwice = false;
 
+    // Set up step history stack which is the record of the states of the different steps
+    var stepHistoryStack = [[]];
+
     function undo() {
         if (undoStack.length == 1) {
-        return undoStack[0]
+            return undoStack[0]
         }
         let element = undoStack.pop();
         redoStack.push(element);
@@ -126,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     function redo() {
         if (redoStack.length == 1) {
-        return redoStack[0]
+            return redoStack[0]
         }
         let element = redoStack.pop();
         undoStack.push(element)
@@ -134,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return element
     }
 
+    // Set up calendar 
     function setNewCalendarEvents(newEvents, oldEvents=calendar.getEvents()) {
         calendar.batchRendering(function () {
             oldEvents.forEach(event => {
@@ -178,10 +84,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         })
     }
 
-    var draggableE1 = document.querySelector('.draggable');
     var calendarEl = document.getElementById('calendar');
     
     // EXAMPLE OF DRAGABBLE FORMAT
+    // var draggableE1 = document.querySelector('.draggable');
     // let draggable = new FullCalendar.Draggable(draggableE1, {
     //     eventData: {
     //     title: 'my event',
@@ -190,6 +96,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     //     }
     // });
 
+    // Set up Calendar
     var calendar = new FullCalendar.Calendar(calendarEl, {
         schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
         initialView: 'resourceTimelineDay',
@@ -238,46 +145,46 @@ document.addEventListener('DOMContentLoaded', async function() {
         {
             headerContent: 'Hours',
             cellContent: function(arg) {
-            var extendedProps = arg.resource.extendedProps;
-            var hours = extendedProps.hours
-            
-            var z = document.createElement('input');
-            z.value = hours
-            z.type = 'number'
-            z.style.width = '40px'
-            z.style.alignSelf = 'center'
+                var extendedProps = arg.resource.extendedProps;
+                var hours = extendedProps.hours
+                
+                var z = document.createElement('input');
+                z.value = hours
+                z.type = 'number'
+                z.style.width = '40px'
+                z.style.alignSelf = 'center'
 
-            let arrayOfDomNodes = [z];
-            return { domNodes: arrayOfDomNodes}
+                let arrayOfDomNodes = [z];
+                return { domNodes: arrayOfDomNodes}
             }
         },
 
         {
             headerContent: 'Shift',
             cellContent: function(arg) {
-            var extendedProps = arg.resource.extendedProps;
-            var possibleShifts = extendedProps.possibleShifts
+                var extendedProps = arg.resource.extendedProps;
+                var possibleShifts = extendedProps.possibleShifts
 
-            // Create select object
-            var shiftSelect = document.createElement('select')
+                // Create select object
+                var shiftSelect = document.createElement('select')
 
-            for (let index = 0; index < allShifts.length; index++) {
-                var shift = allShifts[index];
-                var shiftOption = document.createElement('option');
-                shiftOption.text = shift;
-                if (possibleShifts.includes(shift)) {
-                shiftOption.disabled = false
-                } else {
-                shiftOption.disabled = true
+                for (let index = 0; index < allShifts.length; index++) {
+                    var shift = allShifts[index];
+                    var shiftOption = document.createElement('option');
+                    shiftOption.text = shift;
+                    if (possibleShifts.includes(shift)) {
+                    shiftOption.disabled = false
+                    } else {
+                    shiftOption.disabled = true
+                    }
+                    shiftSelect.add(shiftOption)  
                 }
-                shiftSelect.add(shiftOption)  
-            }
-
-            return {domNodes: [shiftSelect]}
+                return {domNodes: [shiftSelect]}
             }
         }
         ],
-        events: await eel.convert_timetable_to_calendar_events()(),
+        // events: await eel.convert_timetable_to_calendar_events()(),
+        events: [],
         // EXAMPLE OF EVENTS FORMAT
         // events: [
         //   {
@@ -409,6 +316,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     undoStack.push(calendar.getEvents());
     console.log(undoStack, redoStack);
 
+    // Undo on calendar
     document.addEventListener('keydown', function(event) {
         if (event.ctrlKey && event.key === 'z') {
             // let oldEvents = calendar.getEvents();
@@ -421,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-
+    // Redo on calendar
     document.addEventListener('keydown', function(event) {
         if (event.ctrlKey && event.key === 'y') {
             const previousState = redo();
@@ -432,8 +340,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
+    // Add trash icon to the right end of the header toolbar
+    const locationForIcon = document.querySelector(".fc-header-toolbar > .fc-toolbar-chunk:nth-child(3)");
+    const trash = document.createElement('div');
+    trash.classList.add('fcTrash');
+    trash.innerHTML = '<i class="fas fa-trash fa-2x" style="color: red"></i>';
+    locationForIcon.appendChild(trash);
+
     // eel.expose(getCalendarEvents)
-    function getCalendarEvents() {
+    function localISOString(localDate) {
+        let tzoffset = localDate.getTimezoneOffset() * 60000; //offset in milliseconds
+        let localISOTime = (new Date(localDate - tzoffset)).toISOString()
+        return localISOTime
+    }
+
+    function getCalendarEventsForTimetable() {
         var eventsJson = []
         var events = calendar.getEvents();
         for (let index = 0; index < events.length; index++) {
@@ -443,8 +364,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             eventsJson.push({
                 'role': event.title,
-                'start': event.start,
-                'end': event.end,
+                'start': localISOString(event.start),
+                'end': localISOString(event.end),
                 'trooper': resourceIds[0]
             })
         }
@@ -452,21 +373,96 @@ document.addEventListener('DOMContentLoaded', async function() {
         return eventsJson
     }
 
-    // Add trash icon to the right end of the header toolbar
-    const locationForIcon = document.querySelector(".fc-header-toolbar > .fc-toolbar-chunk:nth-child(3)");
-    const trash = document.createElement('div');
-    trash.classList.add('fcTrash');
-    trash.innerHTML = '<i class="fas fa-trash fa-2x" style="color: red"></i>';
-    locationForIcon.appendChild(trash);
-
-
     // Example of sending data over to python 
     // Approach is that you trigger the asyncronous function
     // Then it returns back the value to you from python once it is processed
     // This would be the timetable which is then re-displayed
     document.querySelector('.bingle').onclick = async function () {
-        let returnVal = await eel.print_n(getCalendarEvents())();
+        let returnVal = await eel.convert_calendar_events_to_timetable(getCalendarEventsForTimetable())();
         console.log(returnVal);
     }
+
+    // SETTING UP OF FORM FOR SENDING DATA BACK AND FORTH
+    function initMultiStepForm() {
+        const progressNumber = document.querySelectorAll(".step").length;
+        const slidePage = document.querySelector(".slide-page");
+        const submitBtn = document.querySelector(".submit");
+        const progressText = document.querySelectorAll(".step p");
+        const progressCheck = document.querySelectorAll(".step .check");
+        const bullet = document.querySelectorAll(".step .bullet");
+        const pages = document.querySelectorAll(".page");
+        const nextButtons = document.querySelectorAll(".next");
+        const prevButtons = document.querySelectorAll(".prev");
+        const stepsNumber = pages.length;
+    
+        if (progressNumber !== stepsNumber) {
+            console.warn(
+                "Error, number of steps in progress bar do not match number of pages"
+            );
+        }
+    
+        document.documentElement.style.setProperty("--stepNumber", stepsNumber);
+    
+        let current = 1;
+    
+        for (let i = 0; i < nextButtons.length; i++) {
+            nextButtons[i].addEventListener("click", async function (event) {
+                event.preventDefault();
+    
+                // If generate sentry button is clicked:
+                if (i === 0) {
+                    // TODO: convert eventsJson to timetable
+                    var newEvents = await eel.generate_sentry_for_calendar()();
+                    setNewCalendarEvents(newEvents);
+                }
+
+
+                // Add new events to stepHistoryStack
+                stepHistoryStack.push(newEvents)
+                console.log(stepHistoryStack);
+
+                slidePage.style.marginLeft = `-${
+                    (100 / stepsNumber) * current
+                }%`;
+                bullet[current - 1].classList.add("active");
+                progressCheck[current - 1].classList.add("active");
+                progressText[current - 1].classList.add("active");
+                current += 1;
+                window.scrollTo(0,0);
+                
+            });
+        }
+    
+        for (let i = 0; i < prevButtons.length; i++) {
+            prevButtons[i].addEventListener("click", function (event) {
+                event.preventDefault();
+
+                // Get the step saved state of calendar in stepHistoryStack and set it
+                stepHistoryStack.pop();
+                var previousEvents = stepHistoryStack[stepHistoryStack.length -1];
+                setNewCalendarEvents(previousEvents);
+
+                slidePage.style.marginLeft = `-${
+                    (100 / stepsNumber) * (current - 2)
+                }%`;
+                bullet[current - 2].classList.remove("active");
+                progressCheck[current - 2].classList.remove("active");
+                progressText[current - 2].classList.remove("active");
+                current -= 1;
+            });
+        }
+    
+        // submitBtn.addEventListener("click", function () {
+        //     bullet[current - 1].classList.add("active");
+        //     progressCheck[current - 1].classList.add("active");
+        //     progressText[current - 1].classList.add("active");
+        //     current += 1;
+        //     setTimeout(function () {
+        //         alert("Your Form Successfully Signed up");
+        //         location.reload();
+        //     }, 800);
+        // });
+    }
+    initMultiStepForm();
 
 });

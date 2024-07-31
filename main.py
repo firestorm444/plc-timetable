@@ -185,22 +185,22 @@ default_shift_distribution = determine_shift_distribution(troopers)
 shift_distribution = default_shift_distribution
 
 # GENERATE EMPTY TIMETABLE
-timetable = {}
+blank_timetable = {}
 for trooper in troopers:
-    timetable[trooper] = ['' for j in range(len(duty_timings))]
+    blank_timetable[trooper] = ['' for j in range(len(duty_timings))]
 
 
 
-
-assign_sentry_duty(troopers, timetable, roles)
-timetable['hilmi'][0:6] = ['desk', 'desk', 'out', 'x-ray', 'out', 'desk']
-available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
-allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
-print(generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles))
-add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
-or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
-or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
-print_timetable(timetable, duty_timings)
+# Sequence of generation:
+# assign_sentry_duty(troopers, timetable, roles)
+# timetable['hilmi'][0:6] = ['desk', 'desk', 'out', 'x-ray', 'out', 'desk']
+# available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
+# allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
+# print(generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles))
+# add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
+# or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
+# or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
+# print_timetable(timetable, duty_timings)
 
 import eel
 eel.init('web')
@@ -236,17 +236,16 @@ def get_default_parameters():
         'roles': combined_roles,
         'shift_blocks': shift_block_iso,
         'shift_distribution': default_shift_distribution,
-        'timetable_date': timetable_date.isoformat()
+        'timetable_date': timetable_date.isoformat(),
     }
 
 
-@eel.expose
-def convert_timetable_to_calendar_events():
+def convert_timetable_to_calendar_events(timetable):
     events = []
     trooper_index = 0
     for trooper_name in timetable:
         duty_index = 0
-        duties = timetable[trooper_name]
+        duties = blank_timetable[trooper_name]
         duties.append('')
         while duty_index <= len(duties) - 2:
             initial_duty_index = duty_index
@@ -280,16 +279,51 @@ def convert_timetable_to_calendar_events():
     
     return events
 
-# Example of sending info back and forth from javascript to python
-@eel.expose        
-def print_n(eventsJson):
-    print(1)
-    # Use this method to parse the date string given
-    print([parser.parse(event['start']) for event in eventsJson])
+def get_timing_index(timing, duty_timings):
+    for i in range(len(duty_timings)):
+        if timing == duty_timings[i]:
+            return i
+    
+    return -1
 
-    return '123234235432534534'
 
-eel.getCalendarEvents()(print_n)
+@eel.expose
+def convert_calendar_events_to_timetable(eventsJson, timetable=blank_timetable):
+    trooper_keys = list(troopers.keys())
+    for event in eventsJson:
+        # Use this method to parse the date string given
+        start_datetime = parser.parse(event['start'])
+        start_time = time(hour=start_datetime.hour, minute=start_datetime.minute, second=start_datetime.second)
+        start_index = get_timing_index(start_time, duty_timings)
+
+        end_datetime = parser.parse(event['end']) - datetime.timedelta(hours=1)
+        end_time = time(hour=end_datetime.hour, minute=end_datetime.minute, second=end_datetime.second)
+        end_index = get_timing_index(end_time, duty_timings)
+
+        trooper_name = trooper_keys[int(event['trooper'])]
+
+        if event['role'] == 'nil':
+            role_name = None
+        elif event['role'] == 'duty':
+            role_name = 'TODO'
+        else:
+            role_name = event['role']
+
+
+        timetable[trooper_name][start_index: end_index+1] = [role_name for i in range(end_index-start_index+1)]
+
+    
+    print_timetable(timetable, duty_timings)
+    print(blank_timetable)
+    return timetable
+
+
+@eel.expose
+def generate_sentry_for_calendar(timetable=blank_timetable):
+    assign_sentry_duty(troopers, timetable, roles)
+    return convert_timetable_to_calendar_events(timetable)
+
+
 # print(convert_timetable_to_calendar_events())
 eel.start('timetable.html')
 
