@@ -9,7 +9,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Get default parameters from python and set the timetable date
     var defaultParameters = await eel.get_default_parameters()();
+    var trooperKeys = defaultParameters.trooper_keys;
     var timetableDate = new Date(defaultParameters.timetable_date);
+    var resources = await eel.convert_troopers_to_calendar_resources()();
+
+    // Set up morning & afternoon ending/starting times and the number of troopers doing both
+    let numMorningInput = document.querySelector('#morning-shift-num');
+    let numAfternoonInput = document.querySelector('#afternoon-shift-num');
+    let morningEndingTime = document.querySelector('#morning-ending-time');
+    let afternoonStartingTime = document.querySelector('#afternoon-starting-time')
+
+    numMorningInput.value = defaultParameters.shift_distribution[0];
+    numAfternoonInput.value = defaultParameters.shift_distribution[1];
+    morningEndingTime.value = defaultParameters.shift_blocks.morning[1];
+    afternoonStartingTime.value = defaultParameters.shift_blocks.afternoon[0];
 
     // Manage calendar history - undo and redo
     var undoStack = [];
@@ -39,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return element
     }
 
-    // Set up calendar 
+    // Set up calendar on update from backend
     function setNewCalendarEvents(newEvents, oldEvents=calendar.getEvents()) {
         calendar.batchRendering(function () {
             oldEvents.forEach(event => {
@@ -115,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             center: '',
             end: ''
         },
-        resources: await eel.convert_troopers_to_calendar_resources()(),
+        resources: resources,
         // EXAMPLE OF RESOURCES FORMAT
         // resources: [
         //   {
@@ -149,10 +162,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 var hours = extendedProps.hours
                 
                 var z = document.createElement('input');
-                z.value = hours
-                z.type = 'number'
-                z.style.width = '40px'
-                z.style.alignSelf = 'center'
+                z.classList.add('hours-input')
+                z.value = hours;
+                z.type = 'number';
+                z.style.width = '40px';
+                z.style.alignSelf = 'center';
+                z.id = `hours_${arg.resource.id}`
 
                 let arrayOfDomNodes = [z];
                 return { domNodes: arrayOfDomNodes}
@@ -166,17 +181,19 @@ document.addEventListener('DOMContentLoaded', async function() {
                 var possibleShifts = extendedProps.possibleShifts
 
                 // Create select object
-                var shiftSelect = document.createElement('select')
+                var shiftSelect = document.createElement('select');
+                shiftSelect.classList.add('shift-select');
+                shiftSelect.id = `shifts_${arg.resource.id}`;
 
                 for (let index = 0; index < allShifts.length; index++) {
                     var shift = allShifts[index];
                     var shiftOption = document.createElement('option');
                     shiftOption.text = shift;
-                    if (possibleShifts.includes(shift)) {
-                    shiftOption.disabled = false
-                    } else {
-                    shiftOption.disabled = true
-                    }
+                    // if (possibleShifts.includes(shift)) {
+                    //     shiftOption.disabled = false
+                    // } else {
+                    //     shiftOption.disabled = true
+                    // }
                     shiftSelect.add(shiftOption)  
                 }
                 return {domNodes: [shiftSelect]}
@@ -359,8 +376,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         var events = calendar.getEvents();
         for (let index = 0; index < events.length; index++) {
             const event = events[index];
-            var resources = event.getResources();
-            var resourceIds = resources.map(function(resource) { return resource.id });
+            var eventResources = event.getResources();
+            var resourceIds = eventResources.map(function(resource) { return resource.id });
 
             eventsJson.push({
                 'role': event.title,
@@ -377,14 +394,132 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Approach is that you trigger the asyncronous function
     // Then it returns back the value to you from python once it is processed
     // This would be the timetable which is then re-displayed
-    document.querySelector('.bingle').onclick = async function () {
-        let returnVal = await eel.convert_calendar_events_to_timetable(getCalendarEventsForTimetable())();
-        console.log(returnVal);
+    // document.querySelector('.bingle').onclick = async function () {
+    //     let returnVal = await eel.convert_calendar_events_to_timetable(getCalendarEventsForTimetable())();
+    //     console.log(returnVal);
+    // }
+
+    // FUNCTIONS FOR STEP 2
+    function addAllAvailableShifts(availableShifts, trooperKeys) {
+        for (const trooperName in availableShifts) {
+            let trooperId = trooperKeys.indexOf(trooperName);
+            let possibleShifts = availableShifts[trooperName];
+            let selectElement = document.querySelector(`#shifts_${trooperId}`);
+            for (let i = 0; i < selectElement.options.length; i++) {
+                const shiftOption = selectElement.options[i];
+                if (possibleShifts.includes(shiftOption.text)) {
+                    shiftOption.disabled = false
+                } else {
+                    shiftOption.disabled = true
+                }
+            }
+        }
     }
 
+    function addAllocatedShifts(allocatedShifts, trooperKeys) {
+        for (const shiftName in allocatedShifts) {
+            let shiftTroopers = allocatedShifts[shiftName];
+
+            for (let i = 0; i < shiftTroopers.length; i++) {
+                const trooperName = shiftTroopers[i];
+                const trooperId = trooperKeys.indexOf(trooperName);
+                let selectElement = document.querySelector(`#shifts_${trooperId}`);
+                selectElement.value = shiftName;
+            }
+        }
+    }
+
+    function addAllocatedHours(hoursList) {
+        for (let i = 0; i < hoursList.length; i++) {
+            const hours = hoursList[i];
+            const hoursElement = document.querySelector(`#hours_${i}`);
+            console.log(hoursElement);
+            hoursElement.value = Number(hours);
+        }
+    }
+
+    function validateTotalHours(totalHours) {
+        const hoursElements = document.querySelectorAll('.hours-input');
+        let userTotalHours = 0;
+        for (let i = 0; i < hoursElements.length; i++) {
+            const hours = hoursElements[i];
+            userTotalHours += Number(hours.value);
+        }
+
+        if (userTotalHours !== totalHours) {
+            displayFlashMessage('error', `Calculated total hours of ${userTotalHours} does not match actual total hours of ${totalHours}`);
+            return false;
+        } else {
+            displayFlashMessage('success', 'Hours are matched')
+            return true;
+        }
+    }
+
+    function validateShiftDistribution() {
+        let numMorning = Number(document.querySelector('#morning-shift-num').value);
+        let numAfternoon = Number(document.querySelector('#afternoon-shift-num').value);
+        let shiftSelectElements = document.querySelectorAll(".shift-select");
+        
+        let userNumMorning = 0;
+        let userNumAfternoon = 0;
+        for (let i = 0; i < shiftSelectElements.length; i++) {
+            const shiftSelect = shiftSelectElements[i];
+            let shiftName = shiftSelect.options[shiftSelect.selectedIndex].text;
+            if (shiftName === "morning") {
+                userNumMorning += 1
+            } else if (shiftName === "afternoon"){
+                userNumAfternoon += 1
+            }
+        }
+        console.log(userNumMorning, numMorning);
+        console.log(userNumAfternoon, numAfternoon)
+        if (userNumAfternoon != numAfternoon) {
+            displayFlashMessage("error", `Number of afternoon troopers of ${userNumAfternoon} doesnt match the expected number of ${numAfternoon}`);
+            return false;
+        } else if (userNumMorning != numMorning){
+            displayFlashMessage("error", `Number of morning troopers of ${userNumMorning} doesnt match the expected number of ${numMorning}`);
+            return false;
+        } else {
+            displayFlashMessage("success");
+            return true;
+        }
+    }
+
+    function exportShiftsAndHours() {
+        let morningEndingTime = document.querySelector('#morning-ending-time').value;
+        let afternoonStartingTime = document.querySelector('#afternoon-starting-time').value;
+
+        let hoursList = Array.from(document.querySelectorAll('.hours-input')).map(x => Number(x.value));
+        let shiftList = Array.from(document.querySelectorAll('.shift-select')).map(x => x[x.options.selectedIndex].value);
+
+        console.log(hoursList, shiftList);
+        return {
+            'morningEndingTime': morningEndingTime,
+            'afternoonStartingTime': afternoonStartingTime,
+            'eventsJson': getCalendarEventsForTimetable(),
+            'hours': hoursList,
+            'shift': shiftList
+        }
+
+
+    }
+
+    // FUNCTIONS FOR DISPLAYING FLASH MESSAGES
+    function displayFlashMessage(type, errorMessage=null) {
+        const successElement = document.querySelector('.success-msg');
+        const errorElement = document.querySelector('.error-msg');
+        if (type=="success") {
+            successElement.classList.remove('hidden');
+            errorElement.classList.add('hidden')
+        } else {
+            errorElement.classList.remove('hidden');
+            successElement.classList.add('hidden')
+            errorElement.innerText = 
+            `An error occurred: ${errorMessage}`
+        }
+    }
 
     // SETTING UP OF FORM FOR SENDING DATA BACK AND FORTH
-
     function initMultiStepForm() {
         const progressNumber = document.querySelectorAll(".step").length;
         const slidePage = document.querySelector(".slide-page");
@@ -398,6 +533,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         const stepsNumber = pages.length;
         const successElement = document.querySelector('.success-msg');
         const errorElement = document.querySelector('.error-msg');
+        const hoursElements = document.querySelectorAll('.hours-input');
+        const shiftElements = document.querySelectorAll('.shift-select');
     
         if (progressNumber !== stepsNumber) {
             console.warn(
@@ -412,12 +549,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         for (let i = 0; i < nextButtons.length; i++) {
             nextButtons[i].addEventListener("click", async function (event) {
                 
-                function onDataSuccess(newEvents) {
-                    setNewCalendarEvents(newEvents);
-                    // Add new events to stepHistoryStack
-                    stepHistoryStack.push(newEvents)
-                    console.log(stepHistoryStack);
-            
+                function onDataSuccess(newEvents=null) {
+                    // If there are new events to add
+                    if (newEvents !== null) {
+                        setNewCalendarEvents(newEvents);
+                        // Add new events to stepHistoryStack
+                        stepHistoryStack.push(newEvents)
+                    } else {
+                        stepHistoryStack.push(calendar.getEvents());
+                    }
+                    
                     slidePage.style.marginLeft = `-${
                         (100 / stepsNumber) * current
                     }%`;
@@ -428,17 +569,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                     window.scrollTo(0,0);
                 }
 
-                function displayFlashMessage(type, errorMessage=null) {
-                    if (type=="success") {
-                        successElement.classList.remove('hidden');
-                        errorElement.classList.add('hidden')
-                    } else {
-                        errorElement.classList.remove('hidden');
-                        successElement.classList.add('hidden')
-                        errorElement.innerText = 
-                        `An error occurred when updating timetable: ${errorMessage}`
-                    }
-                }
                 
                 event.preventDefault();
     
@@ -449,15 +579,61 @@ document.addEventListener('DOMContentLoaded', async function() {
                         onDataSuccess(newEvents)
                         displayFlashMessage('success')
                     } catch (error) {
-                        console.log(error);
                         displayFlashMessage('error', error.errorText)
                     }
                 }
 
+                // If confirm custom duties button clicked
                 if (i === 1) {
-                    alert('gfhf');
+                    try {
+                        var result = await eel.assign_shifts_and_hours_for_calendar(getCalendarEventsForTimetable())();
+                        addAllAvailableShifts(result.availableShifts, trooperKeys, calendar);
+                        addAllocatedShifts(result.allocatedShifts, trooperKeys);
+                        addAllocatedHours(result.hoursList);
+                        onDataSuccess();
+                        displayFlashMessage('success');
+                        hoursElements.forEach(element => {
+                            element.addEventListener('change', function () {
+                                validateTotalHours(defaultParameters.total_hours);
+                            })
+                        });
+                        shiftElements.forEach(element => {
+                            element.addEventListener('change', validateShiftDistribution)
+                        });
+                    } catch (error) {
+                        displayFlashMessage('error', error.errorText)
+                    }
+                }
+
+                // If confirm shifts button clicked
+                if (i === 2) {
+                    if (validateShiftDistribution() && validateTotalHours(defaultParameters.total_hours)) {
+                        let exportVal = exportShiftsAndHours();
+                        try {
+                            var newEvents = await eel.assign_duty_timeslots_to_troopers(exportVal)();
+                            setNewCalendarEvents(newEvents)
+                            onDataSuccess();
+                            displayFlashMessage('success');
+                        } catch (error) {
+                            displayFlashMessage('error', error.errorText);
+                        }
+
+                    } else {
+                        displayFlashMessage('error', 'Unable to confirm hours and shifts due to invalid input')
+                    }
                 }
                 
+                // TODO: Update the 
+                if (i == 3) {
+                    try {
+                        var newEvents = await eel.assign_specific_duties_to_troopers(getCalendarEventsForTimetable())();
+                        setNewCalendarEvents(newEvents);
+                        onDataSuccess();
+                        displayFlashMessage('success');
+                    } catch (error) {
+                        displayFlashMessage('error', error.errorText);
+                    }
+                }
             });
         }
     

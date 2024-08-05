@@ -293,3 +293,23 @@ form .page .btns button {
     border: 1px solid #D8000C;
 }
 
+
+.num-shift-container {
+    display: flex;
+    margin-bottom: 0;
+    justify-content: center;
+}
+
+.num-shift {
+    width: 40%;
+    padding: 2px;
+    margin: 5px 0;
+}
+
+.num-shift label {
+    font-weight: 500;
+}
+
+.num-shift input {
+    height: 25px;
+}

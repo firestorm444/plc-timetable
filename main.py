@@ -189,6 +189,9 @@ blank_timetable = {}
 for trooper in troopers:
     blank_timetable[trooper] = ['' for j in range(len(duty_timings))]
 
+combined_roles = deepcopy(roles)
+for key, value in roles_placeholders.items():
+    combined_roles[key] = value
 
 
 # Sequence of generation:
@@ -197,7 +200,7 @@ for trooper in troopers:
 # available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
 # allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
 # troopers = generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles)
-# troopers = add_allocated_shift_to_troopers_dict(allocated_shifts, troopers
+# troopers = add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
 # timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
 # timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
 # print_timetable(timetable, duty_timings)
@@ -228,15 +231,13 @@ def get_default_parameters():
     for key, timings in shift_blocks.items():
         shift_block_iso[key] = [timing.strftime('%H:%M:%S') for timing in timings]
     
-    combined_roles = roles
-    for key, value in roles_placeholders.items():
-        combined_roles[key] = value
-    
     return {
         'roles': combined_roles,
         'shift_blocks': shift_block_iso,
         'shift_distribution': default_shift_distribution,
         'timetable_date': timetable_date.isoformat(),
+        'trooper_keys': list(troopers.keys()),
+        'total_hours': compute_hours(duty_timings, troopers, roles)[0],
     }
 
 
@@ -244,18 +245,29 @@ def convert_timetable_to_calendar_events(timetable):
     events = []
     trooper_index = 0
     for trooper_name, value in timetable.items():
-        print(trooper_name, value)
         duty_index = 0
         duties = timetable[trooper_name]
         duties.append('')
         while duty_index <= len(duties) - 2:
             initial_duty_index = duty_index
             if duties[duty_index] != '':
-                # keep incrementing if adjacent elements are the same
-                while duties[duty_index] == duties[duty_index + 1]:
-                    duty_index += 1
+
+                # Keep the todo singular so its easier to move around (dont clump it together)
+                if duties[duty_index] != 'TODO':
+                    # keep incrementing if adjacent elements are the same
+                    while duties[duty_index] == duties[duty_index + 1]:
+                        duty_index += 1
 
                 duty_name = duties[initial_duty_index]
+                if duty_name is None:
+                    duty_name = 'nil'
+                    roles_key = "None"
+                elif duty_name == 'TODO':
+                    duty_name = 'duty'
+                    roles_key = "TODO"
+                else:
+                    roles_key = duty_name
+
                 initial_hour = duty_timings[initial_duty_index]
                 final_hour = duty_timings[duty_index]
 
@@ -269,10 +281,10 @@ def convert_timetable_to_calendar_events(timetable):
                     "title": duty_name,
                     "start": initial_datetime.isoformat(sep=' '),
                     "end": final_datetime.isoformat(sep=' '),
-                    "backgroundColor": roles[duty_name]['color'],
+                    "backgroundColor": combined_roles[roles_key]['color'],
                 })
 
-                print(trooper_name, trooper_index, duty_name, initial_datetime, final_datetime)
+                # print(trooper_name, trooper_index, duty_name, initial_datetime, final_datetime)
             
             # Move to the next duty
             duty_index += 1
@@ -325,6 +337,52 @@ def generate_sentry_for_calendar():
     # GENERATE EMPTY TIMETABLE
     timetable = deepcopy(blank_timetable)
     timetable = assign_sentry_duty(troopers, timetable, roles)
+    return convert_timetable_to_calendar_events(timetable)
+
+
+@eel.expose
+def assign_shifts_and_hours_for_calendar(eventsJson):
+    global troopers
+    timetable = convert_calendar_events_to_timetable(eventsJson)
+    available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
+    allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
+    troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles)
+
+    hours_list = []
+    for value in troopers.values():
+        hours_list.append(value['assigned_hours'])
+
+
+    return {
+        'hoursList': hours_list,
+        'availableShifts': available_shifts,
+        'allocatedShifts': allocated_shifts
+    }
+
+@eel.expose
+def assign_duty_timeslots_to_troopers(exportVal):
+    global troopers, shift_blocks
+    timetable = convert_calendar_events_to_timetable(exportVal['eventsJson'])
+    i = 0
+    for trooper_name in troopers:
+        trooper_info = troopers[trooper_name]
+        trooper_info['assigned_hours'] = exportVal['hours'][i]
+        trooper_info['shift'] = exportVal['shift'][i]
+        i += 1
+
+    # shift_blocks['morning'][1] = time.fromisoformat(exportVal['morningEndingTime'])
+    # shift_blocks['afternoon'][0] = time.fromisoformat(exportVal['afternoonStartingTime'])
+    
+    timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
+
+    return convert_timetable_to_calendar_events(timetable)
+
+@eel.expose
+def assign_specific_duties_to_troopers(eventsJson):
+    timetable = convert_calendar_events_to_timetable(eventsJson)
+    timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
+    print_timetable(timetable, duty_timings)
+
     return convert_timetable_to_calendar_events(timetable)
 
 

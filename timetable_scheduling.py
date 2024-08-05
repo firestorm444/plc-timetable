@@ -39,7 +39,8 @@ Notes from studying the timetables:
 - Random
 Aim for one large break between duties so not scattered
 '''
-
+class TimetableInputError(Exception):
+    pass
 
 def compute_hours(duty_timings, troopers, roles):
     '''
@@ -51,7 +52,8 @@ def compute_hours(duty_timings, troopers, roles):
     total_hours = 0
     num_troopers = len(troopers)
 
-    for role in roles.values():
+    for role_name in roles:
+        role = roles[role_name]
         if role['timing'] == "whole-day":
             total_hours += len(duty_timings)
         else:
@@ -419,7 +421,6 @@ def generate_duty_hours(troopers, duty_timings, shift_dict, roles):
     shift type. If the person is doing afternoon shift then give more hours to 
     the 
     '''
-
     # Organising the afternoon shift
     afternoon_troopers = shift_dict['afternoon']
     random.shuffle(afternoon_troopers)
@@ -631,6 +632,8 @@ def or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_bl
 
                 if timetable_value == '' and optimal_value == 1:
                     timetable[trooper][t] = 'TODO'
+    else:
+        raise TimetableInputError('Unable to generate duty timeslots. Modify the timetable input and morning/afternoon shift timings once again')
             
     return timetable
 
@@ -766,6 +769,9 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
             trooper_name = troopers_keys[assignment_tuple[0]]
             role_assigned = roles_keys[solver.value(role_index)]
             timetable[trooper_name][assignment_tuple[1]] = role_assigned
+    
+    else:
+        raise TimetableInputError("Unable to assign specific duties. Check the duty timeslots and try again")
 
     return timetable
         
