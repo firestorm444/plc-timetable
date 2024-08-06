@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var allShifts = ['morning', 'afternoon', 'random'];
     var selectAndDragEvents = null;
     var selectAndDragStart, selectAndDragEnd
+    var refreshHours = false;
 
     // Get default parameters from python and set the timetable date
     var defaultParameters = await eel.get_default_parameters()();
@@ -268,13 +269,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const allEventsInTimeslot = calendar.getEvents().filter(selectCheck);
                 const eventsToSwap = [];
 
+                
                 // Workaround since you cannot directly compare event objects
                 for (let index = 0; index < allEventsInTimeslot.length; index++) {
-                const event = allEventsInTimeslot[index];
-                // console.log(draggedEvent.title, draggedEvent.start, draggedEvent.end)
-                    if (!checkEventInDraggedEvents(event, selectAndDragEvents)) {
+                    const event = allEventsInTimeslot[index];
+
+                    if (event.groupId == '') {
                         eventsToSwap.push(event)
-                    } 
+                    }
+
+
+                    // // console.log(draggedEvent.title, draggedEvent.start, draggedEvent.end)
+                    //     if (!checkEventInDraggedEvents(event, selectAndDragEvents)) {
+                    //         eventsToSwap.push(event)
+                    //     } 
                 }
 
                 // console.log(selectAndDragEvents, allEventsInTimeslot, eventsToSwap);
@@ -306,7 +314,20 @@ document.addEventListener('DOMContentLoaded', async function() {
             // the most recent saved state will be the current state of calendar
             undoStack.push(calendar.getEvents())
             undoTwice = true;
-            console.log(undoStack, redoStack);
+
+            // Update the hours if necessary
+            if (refreshHours) {
+                console.log('test');
+                updateTrooperHours(trooperKeys)
+            }
+            // console.log(undoStack, redoStack);
+        },
+
+        eventReceive: function () {
+            // Update the hours if necessary
+            if (refreshHours) {
+                updateTrooperHours(trooperKeys)
+            }
         },
 
         // To delete events if dragged to the trash icon
@@ -331,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Load the first state of the calendar into undostack
     undoStack.push(calendar.getEvents());
-    console.log(undoStack, redoStack);
+    // console.log(undoStack, redoStack);
 
     // Undo on calendar
     document.addEventListener('keydown', function(event) {
@@ -386,7 +407,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 'trooper': resourceIds[0]
             })
         }
-        console.log(eventsJson);
+        // console.log(eventsJson);
         return eventsJson
     }
 
@@ -471,8 +492,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 userNumAfternoon += 1
             }
         }
-        console.log(userNumMorning, numMorning);
-        console.log(userNumAfternoon, numAfternoon)
+        // console.log(userNumMorning, numMorning);
+        // console.log(userNumAfternoon, numAfternoon)
         if (userNumAfternoon != numAfternoon) {
             displayFlashMessage("error", `Number of afternoon troopers of ${userNumAfternoon} doesnt match the expected number of ${numAfternoon}`);
             return false;
@@ -500,10 +521,27 @@ document.addEventListener('DOMContentLoaded', async function() {
             'hours': hoursList,
             'shift': shiftList
         }
-
-
     }
 
+    function updateTrooperHours(trooperKeys) {
+        var trooperHours = Array(trooperKeys.length).fill(0);
+        var allEvents = calendar.getEvents();
+        for (let i = 0; i < allEvents.length; i++) {
+            const event = allEvents[i];
+            var eventDuration = Math.floor((event.end.getTime() - event.start.getTime())/3600000);
+            var trooperIndex = Number(event.getResources()[0].id);
+            trooperHours[trooperIndex] += eventDuration;
+        }
+
+        for (let i = 0; i < trooperKeys.length; i++) {
+            const trooperName = trooperKeys[i];
+            const trooperHoursInput = document.querySelector(`#hours_${i}`);
+            if (trooperHoursInput.value != trooperHours[i]) {
+                trooperHoursInput.value = trooperHours[i];
+            }
+        }
+    }
+ 
     // FUNCTIONS FOR DISPLAYING FLASH MESSAGES
     function displayFlashMessage(type, errorMessage=null) {
         const successElement = document.querySelector('.success-msg');
@@ -614,6 +652,31 @@ document.addEventListener('DOMContentLoaded', async function() {
                             setNewCalendarEvents(newEvents)
                             onDataSuccess();
                             displayFlashMessage('success');
+                            calendar.setOption('resourceAreaColumns', [
+                                {
+                                    field: 'title',
+                                    headerContent: 'Trooper'
+                                },
+                        
+                                {
+                                    headerContent: 'Hours',
+                                    cellContent: function(arg) {
+                                        var extendedProps = arg.resource.extendedProps;
+                                        var hours = extendedProps.hours
+                                        
+                                        var z = document.createElement('input');
+                                        z.classList.add('hours-input')
+                                        z.value = hours;
+                                        z.type = 'number';
+                                        z.style.width = '40px';
+                                        z.style.alignSelf = 'center';
+                                        z.id = `hours_${arg.resource.id}`
+                        
+                                        let arrayOfDomNodes = [z];
+                                        return { domNodes: arrayOfDomNodes}
+                                    }
+                                }])
+                            refreshHours = true;
                         } catch (error) {
                             displayFlashMessage('error', error.errorText);
                         }
@@ -630,6 +693,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                         setNewCalendarEvents(newEvents);
                         onDataSuccess();
                         displayFlashMessage('success');
+                        refreshHours = true;
+                        
                     } catch (error) {
                         displayFlashMessage('error', error.errorText);
                     }
