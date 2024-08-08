@@ -380,10 +380,21 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Add trash icon to the right end of the header toolbar
     const locationForIcon = document.querySelector(".fc-header-toolbar > .fc-toolbar-chunk:nth-child(3)");
+    const parentDiv = document.createElement('div');
+    parentDiv.classList.add('parent-toolbar')
+
     const trash = document.createElement('div');
     trash.classList.add('fcTrash');
     trash.innerHTML = '<i class="fas fa-trash fa-2x" style="color: red"></i>';
-    locationForIcon.appendChild(trash);
+
+    const swapShiftsButton = document.createElement('button');
+    swapShiftsButton.innerText = 'Swap Shifts';
+    swapShiftsButton.classList.add('swap-button', 'hidden');
+
+    locationForIcon.appendChild(parentDiv);
+    parentDiv.appendChild(swapShiftsButton);
+    parentDiv.appendChild(trash);
+
 
     // eel.expose(getCalendarEvents)
     function localISOString(localDate) {
@@ -421,6 +432,96 @@ document.addEventListener('DOMContentLoaded', async function() {
     // }
 
     // FUNCTIONS FOR STEP 2
+    function swapShifts(trooperKeys) {
+        let allShiftsOuter = []
+        const allShifts = document.querySelectorAll('.shift-select');
+        allShifts.forEach( shift => {
+            allShiftsOuter.push(shift.closest(".fc-datagrid-cell"))
+        });
+        
+        allShiftsOuter.forEach( outerShift => {
+            outerShift.addEventListener('click', function(e) {
+                // If the padding is clicked
+                var selectedElement = e.target;
+                var numSelected = document.querySelectorAll('.swap-shift-selected').length
+                if (!selectedElement.classList.contains('shift-select')){
+                    // Check if the element has already been selected
+                    // If this element is clicked again, it is unselected
+                    // Otherwise it is selected
+                    // '.closest' method is used since there are many sub elements in the td cell in fullcalendar that can be clicked
+                    var swapSelected = selectedElement.closest('.swap-shift-selected');
+                    var shiftSelectElement = selectedElement.querySelector('.shift-select');
+
+                    // If the element clicked is already selected, remove it 
+                    if (swapSelected !== null) {
+                        outerShift.classList.remove('swap-shift-selected');
+                        shiftSelectElement.disabled = false;
+
+                    } else if (numSelected < 2) {
+                        outerShift.classList.add('swap-shift-selected');
+                        shiftSelectElement.disabled = true;
+        
+                    }
+                }
+
+                numSelected = document.querySelectorAll('.swap-shift-selected').length;
+                console.log(numSelected);
+                if (numSelected == 2) {
+                    swapShiftsButton.classList.remove('hidden');
+                } else {
+                    swapShiftsButton.classList.add('hidden');
+                }
+                
+            })
+        })
+
+        swapShiftsButton.addEventListener('click', function() {
+            var outerSelected = document.querySelectorAll('.swap-shift-selected');
+            
+            var swapElement0 = outerSelected[0].querySelector('.shift-select');
+            var trooperId0 = Number(swapElement0.id.replace('shifts_', ''));
+            var availableShifts0 = Array.from(swapElement0.options).filter(option => option.disabled == false).map(option => option.value)
+            var selectedShift0 = swapElement0.options[swapElement0.selectedIndex].value;
+            var hoursElement0 = document.querySelector(`#hours_${trooperId0}`)
+
+            var swapElement1 = outerSelected[1].querySelector('.shift-select');
+            var trooperId1 = Number(swapElement1.id.replace('shifts_', ''));
+            var availableShifts1 = Array.from(swapElement1.options).filter(option => option.disabled == false).map(option => option.value)
+            var selectedShift1 = swapElement1.options[swapElement1.selectedIndex].value;
+            var hoursElement1 = document.querySelector(`#hours_${trooperId1}`);
+
+            
+            // Swap the 2 elements only if the selected shift of 1 element is available in the other element and vice versa
+            if (availableShifts1.includes(selectedShift0) && availableShifts0.includes(selectedShift1)) {
+                // Swap the selected values
+                let tempSelected = selectedShift0;
+                swapElement0.value = selectedShift1;
+                swapElement1.value = tempSelected;
+
+                console.log(hoursElement0, hoursElement1);
+                // Swap the hours
+                let tempHours = hoursElement0.value;
+                hoursElement0.value = hoursElement1.value;
+                hoursElement1.value = tempHours;
+
+                displayFlashMessage("success")
+                
+            } else {
+                displayFlashMessage("error", "Unable to swap shifts")
+            }
+            
+
+            // Remove the applied formatting
+            swapElement0.disabled = false;
+            swapElement1.disabled = false;
+
+            // Remove the selected classes
+            document.querySelectorAll('.swap-shift-selected').forEach(element => {
+                element.classList.remove("swap-shift-selected");
+            });
+        })
+    }
+
     function addAllAvailableShifts(availableShifts, trooperKeys) {
         for (const trooperName in availableShifts) {
             let trooperId = trooperKeys.indexOf(trooperName);
@@ -638,6 +739,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                         shiftElements.forEach(element => {
                             element.addEventListener('change', validateShiftDistribution)
                         });
+
+                        swapShifts(trooperKeys);
                     } catch (error) {
                         displayFlashMessage('error', error.errorText)
                     }
@@ -652,30 +755,30 @@ document.addEventListener('DOMContentLoaded', async function() {
                             setNewCalendarEvents(newEvents)
                             onDataSuccess();
                             displayFlashMessage('success');
-                            calendar.setOption('resourceAreaColumns', [
-                                {
-                                    field: 'title',
-                                    headerContent: 'Trooper'
-                                },
+                            // calendar.setOption('resourceAreaColumns', [
+                            //     {
+                            //         field: 'title',
+                            //         headerContent: 'Trooper'
+                            //     },
                         
-                                {
-                                    headerContent: 'Hours',
-                                    cellContent: function(arg) {
-                                        var extendedProps = arg.resource.extendedProps;
-                                        var hours = extendedProps.hours
+                            //     {
+                            //         headerContent: 'Hours',
+                            //         cellContent: function(arg) {
+                            //             var extendedProps = arg.resource.extendedProps;
+                            //             var hours = extendedProps.hours
                                         
-                                        var z = document.createElement('input');
-                                        z.classList.add('hours-input')
-                                        z.value = hours;
-                                        z.type = 'number';
-                                        z.style.width = '40px';
-                                        z.style.alignSelf = 'center';
-                                        z.id = `hours_${arg.resource.id}`
+                            //             var z = document.createElement('input');
+                            //             z.classList.add('hours-input')
+                            //             z.value = hours;
+                            //             z.type = 'number';
+                            //             z.style.width = '40px';
+                            //             z.style.alignSelf = 'center';
+                            //             z.id = `hours_${arg.resource.id}`
                         
-                                        let arrayOfDomNodes = [z];
-                                        return { domNodes: arrayOfDomNodes}
-                                    }
-                                }])
+                            //             let arrayOfDomNodes = [z];
+                            //             return { domNodes: arrayOfDomNodes}
+                            //         }
+                            //     }])
                             refreshHours = true;
                         } catch (error) {
                             displayFlashMessage('error', error.errorText);
