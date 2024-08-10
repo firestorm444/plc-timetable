@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var trooperKeys = defaultParameters.trooper_keys;
     var timetableDate = new Date(defaultParameters.timetable_date);
     var resources = await eel.convert_troopers_to_calendar_resources()();
+    console.log(resources);
 
     // Set up morning & afternoon ending/starting times and the number of troopers doing both
     let numMorningInput = document.querySelector('#morning-shift-num');
@@ -28,28 +29,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Manage calendar history - undo and redo
     var undoStack = [];
     var redoStack = [];
-    var undoTwice = false;
 
     // Set up step history stack which is the record of the states of the different steps
     var stepHistoryStack = [[]];
 
     function undo() {
-        if (undoStack.length == 1) {
-            return undoStack[0]
+        if (undoStack.length > 1) {
+            undoStack.pop()
         }
-        let element = undoStack.pop();
-        redoStack.push(element);
-        undoTwice = false;
+        // Peek at the last element
+        let element = undoStack[undoStack.length-1];
+
+        if (undoStack.length > 1) {
+            redoStack.push(element);
+        }
         return element
     }
 
     function redo() {
-        if (redoStack.length == 1) {
-            return redoStack[0]
+        if (redoStack.length == 0) {
+            return false
         }
-        let element = redoStack.pop();
-        undoStack.push(element)
-        undoTwice = false
+
+        if (redoStack.length >= 1) {
+            redoStack.pop()
+        }
+        let element = redoStack[redoStack.length-1];
+        if (redoStack.length >= 1) {
+            undoStack.push(element);
+        }
         return element
     }
 
@@ -130,6 +138,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             end: ''
         },
         resources: resources,
+        resourceOrder: "order",
         // EXAMPLE OF RESOURCES FORMAT
         // resources: [
         //   {
@@ -313,7 +322,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Set undoTwice to true as if the person undo's once right after dropping the events,
             // the most recent saved state will be the current state of calendar
             undoStack.push(calendar.getEvents())
-            undoTwice = true;
 
             // Update the hours if necessary
             if (refreshHours) {
@@ -357,26 +365,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Undo on calendar
     document.addEventListener('keydown', function(event) {
         if (event.ctrlKey && event.key === 'z') {
-            // let oldEvents = calendar.getEvents();
-            if (undoTwice) {
-                undo()
-            }
             const previousState = undo();
-            setNewCalendarEvents(previousState)
+            if (previousState !== false) {
+                setNewCalendarEvents(previousState)
+            }
             console.log(undoStack, redoStack);
         }
     });
 
-    // Redo on calendar
-    document.addEventListener('keydown', function(event) {
-        if (event.ctrlKey && event.key === 'y') {
-            const previousState = redo();
-            if (undoTwice) {
-                redo()
-            }
-            setNewCalendarEvents(previousState)
-        }
-    });
+    // TODO: Redo on calendar
+    // document.addEventListener('keydown', function(event) {
+    //     if (event.ctrlKey && event.key === 'y') {
+    //         const previousState = redo();
+    //         if (previousState !== false) {
+    //             setNewCalendarEvents(previousState)
+    //         }
+    //         console.log(undoStack, redoStack)
+    //     }
+    // });
 
     // Add trash icon to the right end of the header toolbar
     const locationForIcon = document.querySelector(".fc-header-toolbar > .fc-toolbar-chunk:nth-child(3)");
@@ -403,9 +409,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         return localISOTime
     }
 
-    function getCalendarEventsForTimetable() {
+    function getCalendarEventsForTimetable(events=calendar.getEvents()) {
         var eventsJson = []
-        var events = calendar.getEvents();
         for (let index = 0; index < events.length; index++) {
             const event = events[index];
             var eventResources = event.getResources();
@@ -642,6 +647,41 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         }
     }
+
+    // FUNCTIONS FOR STEP 4
+    function updateMiscellaneousRoles(trooperKeys, breakfast, dinner, lastEnsurer) {
+        const breakfastSelect = document.querySelector('#breakfast');
+        const dinnerSelect = document.querySelector('#dinner');
+        const lastEnsurerSelect = document.querySelector('#last-ensurer');
+
+        console.log(breakfastSelect, dinnerSelect, lastEnsurerSelect);
+        for (let i = 0; i < trooperKeys.length; i++) {
+            const trooperName = trooperKeys[i];
+            
+            breakfastSelect.appendChild(new Option(trooperName));
+            dinnerSelect.appendChild(new Option(trooperName));
+            lastEnsurerSelect.appendChild(new Option(trooperName));
+        }
+
+        breakfastSelect.value = breakfast;
+        dinnerSelect.value = dinner;
+        lastEnsurerSelect.value = lastEnsurer;
+    }
+
+    // FUNCTIONS FOR SUBMIT STEP
+    function handleFormSubmit() {
+        const breakfastSelect = document.querySelector('#breakfast');
+        const dinnerSelect = document.querySelector('#dinner');
+        const lastEnsurerSelect = document.querySelector('#last-ensurer');
+
+        return {
+            'breakfast': breakfastSelect.value,
+            'dinner': dinnerSelect.value,
+            'lastEnsurer': lastEnsurerSelect.value,
+            'duty': getCalendarEventsForTimetable(stepHistoryStack[stepHistoryStack.length-2]),
+            'OCDuty': getCalendarEventsForTimetable(stepHistoryStack[stepHistoryStack.length-1])
+        }
+    }
  
     // FUNCTIONS FOR DISPLAYING FLASH MESSAGES
     function displayFlashMessage(type, errorMessage=null) {
@@ -692,12 +732,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                     // If there are new events to add
                     if (newEvents !== null) {
                         setNewCalendarEvents(newEvents);
-                        // Add new events to stepHistoryStack
-                        stepHistoryStack.push(newEvents)
                     } else {
-                        stepHistoryStack.push(calendar.getEvents());
+                        newEvents = calendar.getEvents();
                     }
+                    stepHistoryStack.push(newEvents);
+
+                    undoStack = [newEvents];
+                    redoStack = [];
                     
+                    console.log(undoStack, redoStack, stepHistoryStack)
                     slidePage.style.marginLeft = `-${
                         (100 / stepsNumber) * current
                     }%`;
@@ -789,19 +832,31 @@ document.addEventListener('DOMContentLoaded', async function() {
                     }
                 }
                 
-                // TODO: Update the 
                 if (i == 3) {
                     try {
-                        var newEvents = await eel.assign_specific_duties_to_troopers(getCalendarEventsForTimetable())();
-                        setNewCalendarEvents(newEvents);
+                        var result = await eel.assign_specific_duties_to_troopers(getCalendarEventsForTimetable())();
+                        setNewCalendarEvents(result.newEvents);
                         onDataSuccess();
                         displayFlashMessage('success');
                         refreshHours = true;
-                        
+                        updateMiscellaneousRoles(trooperKeys, result.breakfast, result.dinner, result.lastEnsurer);
                     } catch (error) {
                         displayFlashMessage('error', error.errorText);
                     }
                 }
+
+                if (i == 4) {
+                    setNewCalendarEvents(calendar.getEvents());
+                    onDataSuccess();
+                    displayFlashMessage('success');
+                }
+
+                if (i == 5) {
+                    onDataSuccess();
+                    displayFlashMessage('success');
+                }
+
+
             });
         }
     
@@ -812,6 +867,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // Get the step saved state of calendar in stepHistoryStack and set it
                 stepHistoryStack.pop();
                 var previousEvents = stepHistoryStack[stepHistoryStack.length -1];
+
                 setNewCalendarEvents(previousEvents);
                 
                 // Reset the undo and redo stacks
@@ -832,16 +888,23 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
     
-        // submitBtn.addEventListener("click", function () {
-        //     bullet[current - 1].classList.add("active");
-        //     progressCheck[current - 1].classList.add("active");
-        //     progressText[current - 1].classList.add("active");
-        //     current += 1;
-        //     setTimeout(function () {
-        //         alert("Your Form Successfully Signed up");
-        //         location.reload();
-        //     }, 800);
-        // });
+        submitBtn.addEventListener("click", async function () {
+            bullet[current - 1].classList.add("active");
+            progressCheck[current - 1].classList.add("active");
+            progressText[current - 1].classList.add("active");
+            current += 1;
+            var submitData = handleFormSubmit();
+            try {
+                var result = await eel.export_timetable(submitData)();
+                alert(result);
+            } catch (error) {
+                
+            }
+            // setTimeout(function () {
+            //     alert("Your Form Successfully Signed up");
+            //     location.reload();
+            // }, 800);
+        });
     }
     initMultiStepForm();
 

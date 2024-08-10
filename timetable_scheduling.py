@@ -8,6 +8,8 @@ import numpy as np
 import xlsxwriter
 import datetime
 import json
+from dateutil.relativedelta import relativedelta, MO
+
 
 import itertools
 from ortools.sat.python import cp_model
@@ -807,12 +809,12 @@ def allocate_miscellaneous_roles(all_troopers, timetable):
     for trooper_name, duty in timetable.items():
         if duty[0] == 'out':
             first_out = trooper_name
-        if duty[len(timetable)-1] == 'out':
+        if duty[len(duty)-1] == 'out':
             last_out = trooper_name
 
         if duty[0] == 'in':
             first_in = trooper_name
-        if duty[len(timetable)-1] == 'out':
+        if duty[len(duty)-1] == 'in':
             last_in = trooper_name
 
     if all_troopers[first_out]['permanent'] and all_troopers[first_out]['status'] == 'stay-in':
@@ -827,7 +829,12 @@ def allocate_miscellaneous_roles(all_troopers, timetable):
         dinner = last_in
 
     # Determine last ensurer
-    temp_troopers = list(timetable.keys())
+    temp_troopers = []
+    for trooper_name in all_troopers:
+        trooper_info = all_troopers[trooper_name]
+        if trooper_info['present'] and trooper_info['status'] != "stay-out":
+            temp_troopers.append(trooper_name)
+
     temp_troopers.remove(breakfast)
     temp_troopers.remove(dinner)
 
@@ -838,12 +845,20 @@ def allocate_miscellaneous_roles(all_troopers, timetable):
 
 
 
+def generate_filename(timetable_type, timetable_date):
+    '''
+    timetable_type(str): A value that indicates if it is normal duty or OC duty
+    '''
+    previous_monday = timetable_date + relativedelta(weekday=MO(-1))
+    previous_monday = previous_monday.strftime("%d%m%y")
+
+    if timetable_type == "OC":
+        return f"Week of {previous_monday}.xlsx"
+    elif timetable_type == "normal":
+        return f"Normal Week of {previous_monday}.xlsx"
 
 
-
-
-def create_excel(all_troopers, timetable, duty_timings, today=datetime.date.today() + datetime.timedelta(days=1)):
-
+def create_excel(filename, all_troopers, timetable, duty_timings, flag_troopers, breakfast, dinner, last_ensurer, today=datetime.date.today() + datetime.timedelta(days=1)):
     # Convert all None to empty string
     for trooper_name, duties in timetable.items():
         for i in range(len(duties)):
@@ -852,7 +867,7 @@ def create_excel(all_troopers, timetable, duty_timings, today=datetime.date.toda
 
     # TODO
     duty_timings2 = [time(x) for x in range(7, 19)]
-    workbook = xlsxwriter.Workbook('trial.xlsx')
+    workbook = xlsxwriter.Workbook(filename)
     worksheet = workbook.add_worksheet()
 
     cell_format_dict = {'bold': True, 'italic': True, 'font_name': 'Arial', 'align': 'center'}
@@ -1267,7 +1282,8 @@ def main_scheduling():
     # print_timetable(timetable, duty_timings)
     
     print(allocate_miscellaneous_roles(all_troopers, timetable))
-    create_excel(all_troopers, timetable, duty_timings)
+    flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
+    create_excel('trial.xlsx', all_troopers, timetable, duty_timings, flag_troopers, breakfast, dinner, last_ensurer)
 
 
 if __name__ == "__main__":

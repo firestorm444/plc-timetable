@@ -66,8 +66,8 @@ all_troopers = {
         'status': 'stay-out',
         'permanent': True,
         'excuse_rmj': False,
-        'present': False,
-        'reason_for_absence': 'AL'
+        'present': True,
+        # 'reason_for_absence': 'AL'
     },
 
     'aniish': {
@@ -107,9 +107,10 @@ all_troopers = {
 
 # Create present troopers dict
 troopers = {}
-for trooper_name in all_troopers:
+for trooper_name in all_troopers.keys():
     if all_troopers[trooper_name]['present'] is True:
         troopers[trooper_name] = all_troopers[trooper_name]
+
 
 # Sorted by standing followed by sitting ==> easier to add as a constraint (can use inequality constraints which is more optimised)
 roles = {
@@ -212,16 +213,18 @@ eel.init('web')
 def convert_troopers_to_calendar_resources():
     calendar_resources = []
     trooper_index = 0
+    ord_initial = 97
     for trooper_name in troopers:
         calendar_resources.append({
             "id": trooper_index,
             "title": trooper_name.capitalize(),
+            "order": chr(ord_initial),
             "extendedProps": {
                 "hours": 0,
-                "possibleShifts": list(shift_blocks.keys()) + ['random']
             }
         })
         trooper_index += 1
+        ord_initial += 1
     
     return calendar_resources
 
@@ -370,22 +373,45 @@ def assign_duty_timeslots_to_troopers(exportVal):
         trooper_info['shift'] = exportVal['shift'][i]
         i += 1
 
-    # shift_blocks['morning'][1] = time.fromisoformat(exportVal['morningEndingTime'])
-    # shift_blocks['afternoon'][0] = time.fromisoformat(exportVal['afternoonStartingTime'])
-    
+    morning_time = time.fromisoformat(exportVal['morningEndingTime'])
+    morning_datetime = datetime.datetime.combine(datetime.date.today(), morning_time) - datetime.timedelta(hours=1)
+    shift_blocks['morning'][1] = datetime.time(hour=morning_datetime.hour, minute=morning_datetime.minute)
+    shift_blocks['afternoon'][0] = time.fromisoformat(exportVal['afternoonStartingTime'])
+    print(shift_blocks)
+
     timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
 
     return convert_timetable_to_calendar_events(timetable)
 
 @eel.expose
 def assign_specific_duties_to_troopers(eventsJson):
+    global flag_troopers
     timetable = convert_calendar_events_to_timetable(eventsJson)
     timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
     print_timetable(timetable, duty_timings)
 
-    return convert_timetable_to_calendar_events(timetable)
+    flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
+    print(breakfast, dinner, last_ensurer)
+    return {
+        'breakfast': breakfast,
+        'dinner': dinner,
+        'lastEnsurer': last_ensurer,
+        'newEvents': convert_timetable_to_calendar_events(timetable)
+    }
 
+@eel.expose
+def export_timetable(exportData):
+    duty_timetable = convert_calendar_events_to_timetable(exportData['duty'])
+    duty_filename = "trial/" + generate_filename("normal", timetable_date)
 
+    oc_duty_timetable = convert_calendar_events_to_timetable(exportData['OCDuty'])
+    oc_filename = "trial/" + generate_filename("OC", timetable_date)
+    
+
+    create_excel(duty_filename, all_troopers, duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
+    create_excel(oc_filename, all_troopers, oc_duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
+    
+    return 'Successfully generated timetable'
 # print(convert_timetable_to_calendar_events())
 eel.start('timetable.html')
 
