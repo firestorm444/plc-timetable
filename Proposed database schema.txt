@@ -1,0 +1,44 @@
+Proposed database schema:
+
+Troopers:
+	Id
+	type
+	status
+	contractType
+	excuseRmj
+
+ReinforcingTroopers
+	Id
+	StartDate
+	EndDate
+
+Roles:
+	Id
+	Name
+	Color
+
+
+RoleTiming
+	RoleId
+	RoleTiming
+
+
+
+
+// For now this data isn't needed
+Timetables
+	TrooperID
+	RoleID
+	startDatetime
+	endDatetime
+
+
+DailyTroopers
+	TrooperId
+	Present
+	ReasonsForAbsence
+	
+	
+	
+
+		

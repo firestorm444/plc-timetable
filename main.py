@@ -13,7 +13,7 @@ all_troopers = {
     },
 
     'xavier': {
-        'type': 'combat',
+        'type': 'service',
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': False,
@@ -28,7 +28,15 @@ all_troopers = {
         'present': True
     },
 
-    'tan di er': {
+    'di er': {
+        'type': 'combat',
+        'status': 'stay-in',
+        'permanent': True,
+        'excuse_rmj': False,
+        'present': True
+    },
+
+    'jian jun': {
         'type': 'combat',
         'status': 'stay-in',
         'permanent': True,
@@ -50,14 +58,15 @@ all_troopers = {
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': True,
-        'present': True,
+        'present': False,
+        'reason_for_absence': 'MC'
     },
 
     "syafi'i": {
         'type': 'service',
         'status': 'stay-out',
         'permanent': True,
-        'excuse_rmj': False,
+        'excuse_rmj': True,
         'present': True,
     },
 
@@ -85,6 +94,15 @@ all_troopers = {
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': True,
+        'present': False,
+        'reason_for_absence': 'MC'
+    },
+
+    'hugo': {
+        'type': 'service',
+        'status': 'stay-in',
+        'permanent': True,
+        'excuse_rmj': False,
         'present': True,
     },
 

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8' />
+        <script type="text/javascript" src="/eel.js"></script>
+        <script src="https://kit.fontawesome.com/ddf9b074ad.js" crossorigin="anonymous"></script>
+        
+        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="/modal.js"></script>
+        
+        <link rel="stylesheet" href="timetable.css"></link>
+    </head>
+    <body>
+        <ul class="navbar">
+            <li><a href="timetable.html">Generate Timetable</a></li>
+            <li class="link-active"><a href="edit-troopers.html">Edit Troopers </a></li>
+        </ul>
+
+        <h2>Permanent troopers</h2>
+        <ul class="trooper-list">
+            <li class="first-row">
+                <em>Displaying n troopers</em> 
+                <div>
+                    <!-- <input type="text" placeholder="Search for clients" class="search"> -->
+                    <button class="trooper-btn add-btn">Add Trooper</button>
+                    <div class="overlay hidden"></div>
+                    <form class="trooper-form add-form page">
+                        <span class="modalClose">&times;</span>
+                        <h2>Add Trooper</h2>
+                        <div class="field">
+                            <div class="label">Name</div>
+                            <input type="text" name="name">
+                        </div>
+                        <div class="toggle-field">
+                            <div class="label">Type</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="select" id="option-1" class="option-1-input">
+                                <input type="radio" name="select" id="option-2" class="option-2-input" checked>
+                                  <label for="option-1" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Combat</span>
+                                     </label>
+                                  <label for="option-2" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>Service</span>
+                                  </label>
+                            </div>
+                            <!-- <select name="type">
+                                <option value="service">Service</option>
+                                <option value="combat">Combat</option>
+                            </select> -->
+                        </div>
+                        <div class="field">
+                            <div class="label">Status</div>
+                            <select name="type">
+                                <option value="stay-in">Service</option>
+                                <option value="stay-out">Combat</option>
+                            </select>
+                        </div>
+
+                        <div ></div>
+
+
+                    </form>
+                </div>
+            </li>
+
+            <li class="trooper-info">
+                <div class="info-text">
+                    <strong>Trooper Name</strong><br>
+                    <div class="trooper-type">Trooper type (service/combat)</div>
+                </div> 
+                <div class="icons">
+                    <!-- <input type="text" placeholder="Enter reason for absence"> -->
+                    <div class="edit-icon"><i class="fas fa-calendar-times fa-2x absent"></i></div>
+                    <div class="edit-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
+                    <button class="trooper-btn edit-btn">Edit Trooper</button>
+
+                    <div class="overlay hidden"></div>
+                    <form action="" class="trooper-form edit-form page">
+                        <span class="modalClose">&times;</span>
+                        <h2>Edit Trooper</h2>
+                        
+                        <div class="field">
+                            <div class="label">Bling</div>
+                            <input type="text">
+                        </div>
+                    </form>
+                </div>
+            </li>
+
+            <li class="trooper-info">
+                <div class="info-text">
+                    <strong>Trooper Name</strong><br>
+                    <div class="trooper-type">Trooper type (service/combat)</div>
+                </div> 
+                <div class="icons">
+                    <!-- <input type="text" placeholder="Enter reason for absence"> -->
+                    <div class="edit-icon"><i class="fas fa-calendar-times fa-2x absent"></i></div>
+                    <div class="edit-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
+                    <button class="trooper-btn edit-btn">Edit Trooper</button>
+
+                    <div class="overlay hidden"></div>
+                    <form action="" class="trooper-form edit-form page">
+                        <span class="modalClose">&times;</span>
+                        <h2>Edit Trooper</h2>
+                        
+                        <div class="field">
+                            <div class="label">Bling2</div>
+                            <input type="text">
+                        </div>
+                    </form>
+                </div>
+            </li>
+        </ul>
+
+
+    </body>
+</html>

@@ -15,7 +15,7 @@
 
 
 body {
-    font-family: "Poppins", sans-serif
+    font-family: "Poppins", sans-serif;
 }
 :root {
     --primary: #333;
@@ -371,4 +371,235 @@ form .page .btns button {
 
 .swap-button:focus {
   box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset, rgba(50, 50, 93, .2) 0 6px 15px 0, rgba(0, 0, 0, .1) 0 2px 2px 0, rgba(50, 151, 211, .3) 0 0 0 4px;
+}
+
+/* NAVBAR STYLING */
+.navbar {
+    display: flex;
+    /* align-items: flex-start; */
+    /* justify-content: baseline; */
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bgColor);
+    border-radius: 7px;
+}
+
+.navbar li {
+    padding: 10px 25px;
+    margin: 0;
+    list-style-type: none;
+    border-radius: 7px;
+}
+
+.navbar li a {
+    text-transform: uppercase;
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+}
+
+.navbar li:hover {
+    background-color: #000;
+}
+
+.link-active {
+    background-color: #04AA6D;
+}
+
+
+/* Styling for Trooper list */
+.trooper-list{
+    background-color: #f4f6f6;
+    padding: 10px;
+    list-style-type: none;
+    list-style: none;
+    margin-top: 10px;
+}
+
+.first-row{
+    display: flex;
+    align-items: center;
+  }
+  
+.first-row em{
+    flex: 1;
+    color: grey;
+}
+
+.trooper-btn {
+    user-select: none;
+    line-height: 30px;
+    background: teal;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid;
+    padding: 1px 5px;
+    margin-left: auto; 
+}
+
+.trooper-info{
+    background-color: #fffcfc;
+    padding: 5px 0;
+    margin: 10px 0;
+    text-indent: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.trooper-type{
+    color: #949494;
+}
+
+.info-text {
+    margin-left: 5px;
+    color: black;
+}
+
+.present {
+    color: green;
+}
+  
+.absent{
+    color: red;
+}
+
+.icons{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-left: auto;
+  }
+
+.edit-icon {
+    cursor: pointer;
+}
+    
+.trooper-form {
+    display: none;  
+    border-radius: 10px;
+    padding: 0 30px 30px 30px;
+    width: 70vw;
+    background: #fff;
+    position: fixed;
+    top:50%;
+    left:50%;
+    transform: translate(-50%,-50%);
+    /* box-shadow: 10px 10px 20px  rgb(178, 178, 178); */
+    z-index: 2;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    z-index: 1;
+  }
+
+
+
+
+/* Close button */
+.modalClose {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+}
+  
+.modalClose:hover,
+.modalClose:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+/* Toggle switch styling */
+.toggle-switch{
+    display: inline-flex;
+    background: #fff;
+    height: 40px;
+    width: 400px;
+    align-items: center;
+    justify-content: space-evenly;
+    border-radius: 5px;
+    padding: 15px 15px;
+    /* box-shadow: 5px 5px 30px rgba(0,0,0,0.2); */
+}
+  
+.toggle-switch .option{
+    background: #fff;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    margin: 0 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0 10px;
+    border: 2px solid lightgrey;
+    transition: all 0.3s ease;
+}
+  
+.toggle-switch .option .dot{
+    height: 20px;
+    width: 20px;
+    background: #d9d9d9;
+    border-radius: 50%;
+    position: relative;
+}
+  
+.toggle-switch .option .dot::before{
+    position: absolute;
+    content: "";
+    top: 4px;
+    left: 4px;
+    width: 12px;
+    height: 12px;
+    background: #333333;
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(1.5);
+    transition: all 0.3s ease;
+}
+
+.toggle-switch input[type="radio"]{
+    display: none;
+}
+  
+.option-1-input:checked ~ .option-1-label,
+.option-2-input:checked ~ .option-2-label{
+    border-color: #333333;
+    background: #333333;
+}
+
+.option-1-input:checked ~ .option-1-label .dot,
+.option-2-input:checked ~ .option-2-label .dot{
+    background: #fff;
+}
+
+.option-1-input:checked ~ .option-1-label .dot::before,
+.option-2-input:checked ~ .option-2-label .dot::before{
+    opacity: 1;
+    transform: scale(1);
+}
+  
+.toggle-switch .option span{
+    font-size: 20px;
+    color: #808080;
+}
+  
+.option-1-input:checked ~ .option-1-label span,
+.option-2-input:checked ~ .option-2-label span{
+    color: #fff;
 }
