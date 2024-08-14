@@ -61,7 +61,21 @@ body {
     font-size: 25px;
     font-weight: 500;
 }
+
 .page .field {
+    width: var(--containerWidth);
+    margin: 10px 0;
+    text-align: left;
+}
+
+.page .field .label {
+    /* position: absolute;
+    top: -30px; */
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.page .btn-field {
     width: var(--containerWidth);
     height: 45px;
     margin: 45px 0;
@@ -69,14 +83,10 @@ body {
     position: relative;
 }
 
-.page .field .label {
-    position: absolute;
-    top: -30px;
-    font-weight: 500;
-}
+
 .page .field input {
     box-sizing: border-box;
-    height: 100%;
+    height: 45px;
     width: 100%;
     border: 1px solid var(--inputBorderColor);
     border-radius: 5px;
@@ -85,16 +95,19 @@ body {
     font-size: 18px;
     transition: border-color 150ms ease;
 }
+
+
 .page .field input.invalid-input {
     border-color: var(--errorColor);
 }
 .page .field select {
     width: 100%;
+    height: 45px;
     padding-left: 10px;
     font-size: 17px;
     font-weight: 500;
 }
-.page .field button {
+.page .btn-field button {
     width: 100%;
     height: calc(100% + 5px);
     border: none;
@@ -109,7 +122,7 @@ body {
     text-transform: uppercase;
     transition: 0.5s ease;
 }
-.page .field button:hover {
+.page .btn-field button:hover {
     background: #000;
 }
 form .page .btns button {
@@ -527,12 +540,12 @@ form .page .btns button {
 .toggle-switch{
     display: inline-flex;
     background: #fff;
-    height: 40px;
+    height: 45px;
     width: 400px;
     align-items: center;
     justify-content: space-evenly;
     border-radius: 5px;
-    padding: 15px 15px;
+    padding: 15px 0;
     /* box-shadow: 5px 5px 30px rgba(0,0,0,0.2); */
 }
   
@@ -546,7 +559,7 @@ form .page .btns button {
     margin: 0 10px;
     border-radius: 5px;
     cursor: pointer;
-    padding: 0 10px;
+    padding: 0 10px 0 0;
     border: 2px solid lightgrey;
     transition: all 0.3s ease;
 }
