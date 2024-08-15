@@ -44,6 +44,6 @@ class GlobalSetting(Base):
     setting_value = Column(String(256), primary_key=True)
 
 
-Base.metadata.drop_all(engine)
+# Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 

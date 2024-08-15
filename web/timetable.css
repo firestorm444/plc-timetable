@@ -353,38 +353,6 @@ form .page .btns button {
     justify-content: center;
 }
 
-/* CSS */
-.swap-button {
-  background-color: #405cf5;
-  border-radius: 6px;
-  border-width: 0;
-  box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
-  box-sizing: border-box;
-  color: #fff;
-  height: 35px;
-  cursor: pointer;
-  font-size: 100%;
-  margin-right: 10px;
-  outline: none;
-  overflow: hidden;
-  padding: 0 7px;
-  position: relative;
-  text-align: center;
-  text-transform: none;
-  transform: translateZ(0);
-  transition: all .2s,box-shadow .08s ease-in;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
-}
-
-.swap-button:disabled {
-  cursor: default;
-}
-
-.swap-button:focus {
-  box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset, rgba(50, 50, 93, .2) 0 6px 15px 0, rgba(0, 0, 0, .1) 0 2px 2px 0, rgba(50, 151, 211, .3) 0 0 0 4px;
-}
 
 /* NAVBAR STYLING */
 .navbar {
@@ -438,18 +406,6 @@ form .page .btns button {
 .first-row em{
     flex: 1;
     color: grey;
-}
-
-.trooper-btn {
-    user-select: none;
-    line-height: 30px;
-    background: teal;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    border: 1px solid;
-    padding: 1px 5px;
-    margin-left: auto; 
 }
 
 .trooper-info{
@@ -541,11 +497,15 @@ form .page .btns button {
     display: inline-flex;
     background: #fff;
     height: 45px;
-    width: 400px;
+    width: 50%;
+    /* max-width: 425px;
+    min-width: 370px; */
+    width: 425px;
     align-items: center;
     justify-content: space-evenly;
     border-radius: 5px;
-    padding: 15px 0;
+    margin: auto;
+    /* padding: 15px 0; */
     /* box-shadow: 5px 5px 30px rgba(0,0,0,0.2); */
 }
   
@@ -608,11 +568,65 @@ form .page .btns button {
 }
   
 .toggle-switch .option span{
-    font-size: 20px;
+    font-size: 19px;
     color: #808080;
 }
   
 .option-1-input:checked ~ .option-1-label span,
 .option-2-input:checked ~ .option-2-label span{
     color: #fff;
+}
+
+
+/* Buttons */
+.swap-button {
+    background-color: #405cf5;
+    border-radius: 6px;
+    border-width: 0;
+    box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
+    box-sizing: border-box;
+    color: #fff;
+    height: 35px;
+    cursor: pointer;
+    font-size: 100%;
+    margin-right: 10px;
+    outline: none;
+    overflow: hidden;
+    padding: 0 7px;
+    position: relative;
+    text-align: center;
+    text-transform: none;
+    transform: translateZ(0);
+    transition: all .2s,box-shadow .08s ease-in;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  
+  .swap-button:disabled {
+    cursor: default;
+  }
+  
+  .swap-button:focus {
+    box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset, rgba(50, 50, 93, .2) 0 6px 15px 0, rgba(0, 0, 0, .1) 0 2px 2px 0, rgba(50, 151, 211, .3) 0 0 0 4px;
+  }
+  
+  .trooper-btn {
+      user-select: none;
+      line-height: 30px;
+      background: teal;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid;
+      padding: 1px 5px;
+      margin-left: auto; 
+  }
+  
+  .trooper-submit-btn {
+      margin: 60px 0 0px 0 !important; 
+  }
+
+.trooper-submit-btn button {
+    margin-top: 0 !important;
 }

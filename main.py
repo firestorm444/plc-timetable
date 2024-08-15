@@ -430,6 +430,14 @@ def export_timetable(exportData):
     create_excel(oc_filename, all_troopers, oc_duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
     
     return 'Successfully generated timetable'
+
+@eel.expose
+def add_trooper(trooperInfo):
+    pprint.pprint(trooperInfo)
+
+    return 'sdfsd'
+
+
 # print(convert_timetable_to_calendar_events())
 eel.start('timetable.html')
 
