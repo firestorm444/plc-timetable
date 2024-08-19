@@ -17,9 +17,9 @@
         </ul>
 
         <h2>Permanent troopers</h2>
-        <ul class="trooper-list">
+        <ul class="trooper-list" id="edit-trooper-list">
             <li class="first-row">
-                <em>Displaying n troopers</em> 
+                <em>Displaying _ troopers</em> 
                 <div>
                     <!-- <input type="text" placeholder="Search for clients" class="search"> -->
                     <button class="trooper-btn add-btn">Add Trooper</button>
@@ -98,8 +98,6 @@
                         <div class="btn-field trooper-submit-btn">
                             <button class="firstNext next" type="submit">Submit</button>
                         </div>
-
-
                     </form>
                 </div>
             </li>
@@ -111,19 +109,85 @@
                 </div> 
                 <div class="icons">
                     <!-- <input type="text" placeholder="Enter reason for absence"> -->
-                    <div class="edit-icon"><i class="fas fa-calendar-times fa-2x absent"></i></div>
+                    <div class="edit-icon"><i class="fas fa-calendar-times fa-2x absent hidden"></i></div>
                     <div class="edit-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
                     <button class="swap-button edit-btn">Edit Trooper</button>
-
+                    <button class="swap-button" style="background-color: red;">Archive</button>
                     <div class="overlay hidden"></div>
                     <form action="" class="trooper-form edit-form page">
                         <span class="modalClose">&times;</span>
                         <h2>Edit Trooper</h2>
-                        
                         <div class="field">
-                            <div class="label">Bling</div>
-                            <input type="text">
+                            <div class="label">Name</div>
+                            <input type="text" name="edit-trooper-name" required>
                         </div>
+                        <div class="field">
+                            <div class="label">Type</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="edit-trooper-type" id="edit-trooper-type-combat-1" class="option-1-input" value="combat">
+                                <input type="radio" name="edit-trooper-type" id="edit-trooper-type-service-1" class="option-2-input" value="service">
+                                  <label for="edit-trooper-type-combat-1" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Combat</span>
+                                     </label>
+                                  <label for="edit-trooper-type-service-1" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>Service</span>
+                                  </label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Status</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="edit-trooper-status" id="edit-trooper-status-stayin-1" class="option-1-input" value="stay-in">
+                                <input type="radio" name="edit-trooper-status" id="edit-trooper-status-stayout-1" class="option-2-input" value="stay-out">
+                                  <label for="edit-trooper-status-stayin-1" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Stay-in</span>
+                                     </label>
+                                  <label for="edit-trooper-status-stayout-1" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>Stay-out</span>
+                                  </label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="label">Type</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="edit-trooper-is-permanent" id="edit-trooper-permanent-1" class="option-1-input" value="true" checked>
+                                <input type="radio" name="edit-trooper-is-permanent" id="edit-trooper-rf-1" class="option-2-input" value="false">
+                                  <label for="edit-trooper-permanent-1" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Permanent</span>
+                                     </label>
+                                  <label for="edit-trooper-rf-1" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>RF</span>
+                                  </label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="label">Excuse RMJ</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="edit-trooper-excuse-rmj" id="edit-trooper-excuse-rmj-yes-1" class="option-1-input" value="true">
+                                <input type="radio" name="edit-trooper-excuse-rmj" id="edit-trooper-excuse-rmj-no-1" class="option-2-input" value="false" checked>
+                                  <label for="edit-trooper-excuse-rmj-yes-1" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Yes</span>
+                                     </label>
+                                  <label for="edit-trooper-excuse-rmj-no-1" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>No</span>
+                                  </label>
+                            </div>
+                        </div>
+
+                        <div class="btn-field trooper-submit-btn">
+                            <button class="firstNext next" type="submit">Submit</button>
+                        </div>
+
                     </form>
                 </div>
             </li>

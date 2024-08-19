@@ -412,7 +412,7 @@ form .page .btns button {
     background-color: #fffcfc;
     padding: 5px 0;
     margin: 10px 0;
-    text-indent: 5px;
+    /* text-indent: 5px; */
     display: flex;
     align-items: center;
 }
@@ -422,7 +422,7 @@ form .page .btns button {
 }
 
 .info-text {
-    margin-left: 5px;
+    margin-left: 10px;
     color: black;
 }
 
@@ -439,7 +439,11 @@ form .page .btns button {
     justify-content: flex-end;
     align-items: center;
     margin-left: auto;
-  }
+}
+
+.icons > * {
+    margin: 0 0 0 10px;
+}
 
 .edit-icon {
     cursor: pointer;
@@ -589,7 +593,6 @@ form .page .btns button {
     height: 35px;
     cursor: pointer;
     font-size: 100%;
-    margin-right: 10px;
     outline: none;
     overflow: hidden;
     padding: 0 7px;

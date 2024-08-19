@@ -1,4 +1,5 @@
 from timetable_scheduling import *
+from model import *
 from dateutil import parser
 
 # INITIALISING VARIABLES
@@ -12,8 +13,8 @@ all_troopers = {
         'present': True
     },
 
-    'xavier': {
-        'type': 'service',
+    'jian july': {
+        'type': 'combat',
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': False,
@@ -25,7 +26,8 @@ all_troopers = {
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': False,
-        'present': True
+        'present': False,
+        'reason_for_absence': "AL"
     },
 
     'di er': {
@@ -36,8 +38,16 @@ all_troopers = {
         'present': True
     },
 
-    'jian jun': {
+    'nas': {
         'type': 'combat',
+        'status': 'stay-in',
+        'permanent': False,
+        'excuse_rmj': False,
+        'present': True
+    },
+
+    'xavier': {
+        'type': 'service',
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': False,
@@ -49,8 +59,8 @@ all_troopers = {
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': True,
-        'present': True,
-        # 'reason_for_absence': 'MC'
+        'present': False,
+        'reason_for_absence': 'AL'
     },
 
     'jun': {
@@ -75,8 +85,8 @@ all_troopers = {
         'status': 'stay-out',
         'permanent': True,
         'excuse_rmj': False,
-        'present': True,
-        # 'reason_for_absence': 'AL'
+        'present': False,
+        'reason_for_absence': 'MC'
     },
 
     'aniish': {
@@ -94,8 +104,8 @@ all_troopers = {
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': True,
-        'present': False,
-        'reason_for_absence': 'MC'
+        'present': True,
+        # 'reason_for_absence': 'MC'
     },
 
     'hugo': {
@@ -434,10 +444,51 @@ def export_timetable(exportData):
 @eel.expose
 def add_trooper(trooperInfo):
     pprint.pprint(trooperInfo)
+    trooper = Trooper(
+        name = trooperInfo["name"],
+        trooper_type = trooperInfo["trooper_type"],
+        status = trooperInfo["status"],
+        is_permanent = trooperInfo["is_permanent"],
+        archived = False,
+        excuse_rmj = trooperInfo["excuse_rmj"],
+        )
+    session.add(trooper)
 
-    return 'sdfsd'
+    order_num = session.query(TrooperOrder).count() + 1
+    if trooperInfo["is_permanent"]:
+        trooper_order = TrooperOrder(
+            trooper_id = trooper.id,
+            order = order_num
+        )
+        session.add(trooper_order)
 
 
+    try:
+        session.commit()
+        return 'Trooper added successfully'
+    except:
+        raise Exception("Unable to add trooper to database")
+
+
+@eel.expose
+def get_permanent_troopers():
+    troopers_query = session.execute(
+        select(Trooper)
+        .join(TrooperOrder)
+        .filter(Trooper.archived == False)
+        .order_by(TrooperOrder.id)).scalars().all()
+
+    troopers_list = []
+    for row in troopers_query:
+        troopers_list.append({
+            "name": row.name,
+            "trooper_type": row.trooper_type,
+            "status": row.status,
+            "archived": row.archived,
+            "excuse_rmj": row.excuse_rmj
+        })
+
+    return troopers_list
 # print(convert_timetable_to_calendar_events())
 eel.start('timetable.html')
 

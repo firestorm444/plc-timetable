@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, select
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, select, func
 from sqlalchemy.orm import declarative_base, relationship, Session
 
 engine = create_engine("sqlite+pysqlite:///timetable.db")
@@ -14,34 +14,37 @@ class Trooper(Base):
     is_permanent = Column(Boolean)
     archived = Column(Boolean)
     excuse_rmj = Column(Boolean)
-
+    order = relationship("TrooperOrder", back_populates="trooper")
 
 class TrooperOrder(Base):
     __tablename__ = "trooper_order"
-    trooper_id = Column(Integer, primary_key=True)
-    order =  Column(Integer, primary_key=True)
-    trooper = relationship("Trooper", back_populates="TrooperOrder")
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trooper_id = Column(Integer, ForeignKey("trooper.id"))
+    order =  Column(Integer)
+    trooper = relationship("Trooper", back_populates="order")
 
 
 class Role(Base):
     __tablename__ = "role"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128))
     color = Column(String(30))
-    timings = relationship("RoleTiming", back_populates="role")
+    timing = relationship("RoleTiming", back_populates="role")
 
 class RoleTiming(Base):
     __tablename__ = "role_timing"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     role_id = Column(Integer, ForeignKey("role.id"))
     timing = Column(Time)
-    role = relationship("Role", back_populates="role_timing")
+    role = relationship("Role", back_populates="timing")
 
 
 class GlobalSetting(Base):
     __tablename__ = "global_setting"
-    setting_name = Column(String(256), primary_key=True)
-    setting_value = Column(String(256), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    category = Column(String(256))
+    name = Column(String(256))
+    value = Column(String(256))
 
 
 # Base.metadata.drop_all(engine)
