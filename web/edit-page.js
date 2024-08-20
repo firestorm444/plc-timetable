@@ -9,8 +9,47 @@ function reloadLightboxes(iconName, containerName) {
         $(this).siblings(containerName).prev('.overlay').fadeIn(350);
       });
 }
- 
- async function getTroopers() {
+
+
+function editFormsOnSubmit() {
+    const editTrooperForms = document.querySelectorAll('.edit-form');
+    editTrooperForms.forEach(trooperForm => {
+        trooperForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formElements = trooperForm.elements;
+            const trooperId = formElements.namedItem("edit-trooper-id").value
+            const trooperName = formElements.namedItem("edit-trooper-name").value
+            const trooperType = formElements.namedItem("edit-trooper-type").value;
+            const trooperStatus = formElements.namedItem("edit-trooper-status").value;
+            const isPermanent = formElements.namedItem("edit-trooper-is-permanent").value === "true";
+            const excuseRMJ = formElements.namedItem("edit-trooper-excuse-rmj").value === "true";
+
+            const trooperInfo = {
+                "id": trooperId,
+                "name": trooperName.toLowerCase(),
+                "trooper_type": trooperType,
+                "status": trooperStatus,
+                "is_permanent": isPermanent,
+                "excuse_rmj": excuseRMJ
+            }
+
+            try {
+                var result = await eel.edit_trooper(trooperInfo)();
+                alert(result);
+                await getTroopers();
+            } catch (error) {
+                console.log(error)
+            }
+
+        })
+    });
+}
+
+
+
+
+
+async function getTroopers() {
     const troopers = await eel.get_permanent_troopers()();
     
     const editTrooperList = document.querySelector('#edit-trooper-list');
@@ -20,6 +59,7 @@ function reloadLightboxes(iconName, containerName) {
         editTrooperList.removeChild(editTrooperList.lastElementChild);
     }
 
+    // Create the li element and append the info to it
     for (let i = 0; i < troopers.length; i++) {
         const trooper = troopers[i];
         var liInnerHtml = `
@@ -37,6 +77,7 @@ function reloadLightboxes(iconName, containerName) {
                 <form action="" class="trooper-form edit-form page">
                     <span class="modalClose">&times;</span>
                     <h2>Edit Trooper</h2>
+                    <input type="hidden" name="edit-trooper-id" value=${trooper.id}>
                     <div class="field">
                         <div class="label">Name</div>
                         <input type="text" name="edit-trooper-name" value=${trooper.name} required>
@@ -123,6 +164,9 @@ function reloadLightboxes(iconName, containerName) {
     displayText.textContent = `Displaying ${troopers.length} troopers`
     reloadLightboxes('.edit-btn', '.edit-form');
     
+    // Add event listeners to manage the submitting of edit forms
+    editFormsOnSubmit();
+
     
 
 }
@@ -130,6 +174,8 @@ function reloadLightboxes(iconName, containerName) {
 
 document.addEventListener("DOMContentLoaded", async function() {
     await getTroopers();
+
+    // Manage the submit of add trooper form
     const addTrooperForm = document.querySelector('#add-trooper-form');
     addTrooperForm.addEventListener("submit", async function(event) {
         event.preventDefault();

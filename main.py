@@ -481,6 +481,7 @@ def get_permanent_troopers():
     troopers_list = []
     for row in troopers_query:
         troopers_list.append({
+            "id": row.id,
             "name": row.name,
             "trooper_type": row.trooper_type,
             "status": row.status,
@@ -489,6 +490,29 @@ def get_permanent_troopers():
         })
 
     return troopers_list
+
+
+@eel.expose
+def edit_trooper(trooperInfo):
+    print(trooperInfo)
+    trooper = session.execute(
+        select(Trooper)
+        .filter_by(id=int(trooperInfo['id']))
+    ).scalars().first()
+
+    trooper.name = trooperInfo['name']
+    trooper.trooper_type = trooperInfo['trooper_type']
+    trooper.status = trooperInfo['status']
+    trooper.is_permanent = trooperInfo['is_permanent']
+    trooper.excuse_rmj = trooperInfo['excuse_rmj']
+
+
+    try:
+        session.commit()
+        return 'Trooper added successfully'
+    except:
+        raise Exception("Unable to add trooper to database")
+
 # print(convert_timetable_to_calendar_events())
 eel.start('timetable.html')
 
