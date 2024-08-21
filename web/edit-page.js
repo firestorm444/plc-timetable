@@ -97,9 +97,10 @@ function setCurrentTroopers(currentTroopers) {
     const editTrooperList = document.querySelector('#edit-trooper-list');
     
     // Clear the trooper list except for beginning row
-    while (editTrooperList.childElementCount > 1) {
-        editTrooperList.removeChild(editTrooperList.lastElementChild);
-    }
+    const elementsToDelete = editTrooperList.querySelectorAll('.trooper-info')
+    elementsToDelete.forEach(element => {
+        element.remove();
+    });
 
     // Create the li element and append the info to it
     for (let i = 0; i < currentTroopers.length; i++) {
@@ -208,8 +209,8 @@ function setCurrentTroopers(currentTroopers) {
     displayText.textContent = `Displaying ${currentTroopers.length} troopers`
     
     // Reload modals
-    // reloadLightboxes('.edit-btn', '.edit-form');
-    addLightboxes();
+    reloadLightboxes('.edit-btn', '.edit-form');
+    // addLightboxes();
     
     const editTrooperForms = document.querySelectorAll('.edit-form');
     // Add event listeners to manage the submitting of edit forms
@@ -224,11 +225,11 @@ function setCurrentTroopers(currentTroopers) {
 
     var sortable = new Sortable(editTrooperList, {
         handle: ".drag-icon",
-        animation: 200,
-        filter: '.first-row',
-        onMove: function (evt) {
-            return evt.related.className.indexOf('first-row') === -1;
-        }
+        animation: 150,
+    //     filter: '.first-row-edit',
+    //     // onMove: function (evt) {
+    //     //     return evt.related.className.indexOf('first-row-edit') === -1;
+    //     // }
     });
 }
 
@@ -304,7 +305,7 @@ function setArchivedTroopers(archivedTroopers) {
     onTrooperUnarchive();
 
     // Add event listeners to manage the deleting of troopers
-    // onTrooperDelete();
+    onTrooperDelete();
 
     // var searchInput = document.querySelector('.search')
     // searchInput.addEventListener('keyup', function filterClients() {
@@ -335,13 +336,11 @@ async function loadPage() {
     const archivedTroopers = result[1];
     setCurrentTroopers(currentTroopers);
     setArchivedTroopers(archivedTroopers);
-    addFormOnSubmit();
     addLightboxes();
 }
 
 
 function addFormOnSubmit() {
-    
     // Manage the submit of add trooper form
     const addTrooperForm = document.querySelector('#add-trooper-form');
     addTrooperForm.addEventListener("submit", async function(event) {
@@ -364,7 +363,7 @@ function addFormOnSubmit() {
         try {
             var result = await eel.add_trooper(trooperInfo)();
             alert(result);
-            await loadPage();
+            loadPage();
         } catch (error) {
             console.log(error)
         }
@@ -375,5 +374,6 @@ function addFormOnSubmit() {
 
 
 document.addEventListener("DOMContentLoaded", function() {
+    addFormOnSubmit();
     loadPage();
 })
