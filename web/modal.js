@@ -37,4 +37,4 @@ function addLightboxes() {
   })
 }
 
-$(document).ready(addLightboxes);
+// $(document).ready(addLightboxes);

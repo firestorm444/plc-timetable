@@ -8,11 +8,21 @@ function reloadLightboxes(iconName, containerName) {
         $(this).siblings(containerName).fadeIn(350);
         $(this).siblings(containerName).prev('.overlay').fadeIn(350);
       });
+    
+    $(document).mousedown(function (event) {
+        var container = $(containerName);
+        if ((!container.is(event.target) // if the target of the click isn't the container...
+            && !$(event.target).closest(containerName).length)
+            || ($(event.target).hasClass('modalClose')))
+        {
+            container.prev('.overlay').fadeOut(350);
+            container.fadeOut(350);
+        }
+    });
 }
 
-
-function editFormsOnSubmit() {
-    const editTrooperForms = document.querySelectorAll('.edit-form');
+// SET CURRENT TROOPERS HELPER FUNCTIONS
+function editFormsOnSubmit(editTrooperForms) {
     editTrooperForms.forEach(trooperForm => {
         trooperForm.addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -36,22 +46,54 @@ function editFormsOnSubmit() {
             try {
                 var result = await eel.edit_trooper(trooperInfo)();
                 alert(result);
-                await getTroopers();
+                await loadPage();
             } catch (error) {
                 console.log(error)
             }
+        })
+    });
+}
+
+function manageTrooperAttendance() {
+    const editTrooperListElements = document.querySelectorAll('#edit-trooper-list .trooper-info');
+    editTrooperListElements.forEach(listElement => {
+        const absentIcon = listElement.querySelector('.absent-icon');
+        const presentIcon = listElement.querySelector('.present-icon');
+        const absenceInput = listElement.querySelector('.absence-reason');
+
+        console.log(absentIcon, presentIcon)
+
+        presentIcon.addEventListener('click', function () {
+            presentIcon.classList.add('hidden');
+            absentIcon.classList.remove('hidden');
+            absenceInput.classList.remove('hidden');
+        })
+
+        absentIcon.addEventListener('click', function () {
+            absentIcon.classList.add('hidden');
+            absenceInput.classList.add('hidden');
+            presentIcon.classList.remove('hidden');
 
         })
     });
 }
 
+function onTrooperArchive() {
+    const editTrooperListElements = document.querySelectorAll('#edit-trooper-list .trooper-info');
+    editTrooperListElements.forEach(listElement => {
+        const trooperId = Number(listElement.dataset.id);
+        const archiveButton = listElement.querySelector('.archive-btn');
+        
+        archiveButton.addEventListener('click', async function() {
+            const result = await eel.archive_trooper(trooperId);
+            loadPage();
+        })
 
+    });
+}
 
-
-
-async function getTroopers() {
-    const troopers = await eel.get_permanent_troopers()();
-    
+// SET CURRENT TROOPERS MAIN FUNCTION
+function setCurrentTroopers(currentTroopers) {
     const editTrooperList = document.querySelector('#edit-trooper-list');
     
     // Clear the trooper list except for beginning row
@@ -60,19 +102,20 @@ async function getTroopers() {
     }
 
     // Create the li element and append the info to it
-    for (let i = 0; i < troopers.length; i++) {
-        const trooper = troopers[i];
+    for (let i = 0; i < currentTroopers.length; i++) {
+        const trooper = currentTroopers[i];
         var liInnerHtml = `
+            <i class="fas fa-bars fa-2x drag-icon"></i>
             <div class="info-text">
                 <strong>${capitalise(trooper.name)}</strong><br>
                 <div class="trooper-type">${capitalise(trooper.trooper_type)}</div>
             </div> 
             <div class="icons">
-                <!-- <input type="text" placeholder="Enter reason for absence"> -->
-                <div class="edit-icon"><i class="fas fa-calendar-times fa-2x absent hidden"></i></div>
-                <div class="edit-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
+                <input type="text" placeholder="Enter absence reason" class="absence-reason hidden">
+                <div class="edit-icon absent-icon hidden"><i class="fas fa-calendar-times fa-2x absent"></i></div>
+                <div class="edit-icon present-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
                 <button class="swap-button edit-btn">Edit Trooper</button>
-                <button class="swap-button" style="background-color: red;">Archive</button>
+                <button class="swap-button archive-btn" style="background-color: red;">Archive</button>
                 <div class="overlay hidden"></div>
                 <form action="" class="trooper-form edit-form page">
                     <span class="modalClose">&times;</span>
@@ -155,26 +198,150 @@ async function getTroopers() {
         // Add the elements to the list
         const trooperInfoElement = document.createElement('li');
         trooperInfoElement.classList.add('trooper-info');
+        trooperInfoElement.dataset.id = trooper.id;
         trooperInfoElement.innerHTML = liInnerHtml;
         editTrooperList.appendChild(trooperInfoElement);
     }
     
     // change display text - "displaying n troopers" --> change the n
-    const displayText = document.querySelector(".first-row em");
-    displayText.textContent = `Displaying ${troopers.length} troopers`
-    reloadLightboxes('.edit-btn', '.edit-form');
+    const displayText = document.querySelector("#edit-trooper-list .first-row em");
+    displayText.textContent = `Displaying ${currentTroopers.length} troopers`
     
+    // Reload modals
+    // reloadLightboxes('.edit-btn', '.edit-form');
+    addLightboxes();
+    
+    const editTrooperForms = document.querySelectorAll('.edit-form');
     // Add event listeners to manage the submitting of edit forms
-    editFormsOnSubmit();
+    editFormsOnSubmit(editTrooperForms);
 
-    
+    // Add event listeners to manage the change of attendance
+    manageTrooperAttendance();
 
+    // Add event listeners to manage the archiving of troopers
+    onTrooperArchive();
+
+
+    var sortable = new Sortable(editTrooperList, {
+        handle: ".drag-icon",
+        animation: 200,
+        filter: '.first-row',
+        onMove: function (evt) {
+            return evt.related.className.indexOf('first-row') === -1;
+        }
+    });
 }
 
 
-document.addEventListener("DOMContentLoaded", async function() {
-    await getTroopers();
+// SET ARCHIVED TROOPERS HELPER FUNCTIONS
+function onTrooperUnarchive() {
+    const archivedTrooperListElements = document.querySelectorAll('#archived-trooper-list .trooper-info');
+    archivedTrooperListElements.forEach(listElement => {
+        const trooperId = Number(listElement.dataset.id);
+        const unarchiveButton = listElement.querySelector('.unarchive-btn');
 
+        unarchiveButton.addEventListener('click', async function() {
+            const result = await eel.unarchive_trooper(trooperId);
+            loadPage();
+        })
+
+    });
+}
+
+function onTrooperDelete() {
+    const archivedTrooperListElements = document.querySelectorAll('#archived-trooper-list .trooper-info');
+    archivedTrooperListElements.forEach(listElement => {
+        const trooperId = Number(listElement.dataset.id);
+        const deleteButton = listElement.querySelector('.delete-btn');
+
+        deleteButton.addEventListener('click', async function() {
+            let confirmation = confirm('Are you sure you want to delete the trooper? Only delete if he has ORD');
+            if (confirmation) {
+                const result = await eel.delete_trooper(trooperId);
+                loadPage();
+            }
+            
+        });
+
+    });
+
+}
+
+// SET ARCHIVED TROOPERS MAIN FUNCTION
+function setArchivedTroopers(archivedTroopers) {
+    const archivedTrooperList = document.querySelector('#archived-trooper-list')
+    // Clear the trooper list except for beginning row
+    while (archivedTrooperList.childElementCount > 1) {
+        archivedTrooperList.removeChild(archivedTrooperList.lastElementChild);
+    }
+
+    for (let i = 0; i < archivedTroopers.length; i++) {
+        const archivedTrooper = archivedTroopers[i];
+        var liInnerHtml = `
+            <div class="info-text">
+                <strong>${capitalise(archivedTrooper.name)}</strong><br>
+                <div class="trooper-type">${capitalise(archivedTrooper.trooper_type)}</div>
+            </div> 
+            <div class="icons">
+                <button class="swap-button unarchive-btn">Unarchive</button>
+                <button class="swap-button delete-btn" style="background-color: red;">Delete</button>
+            </div>
+        `
+
+        // Add the elements to the list
+        const trooperInfoElement = document.createElement('li');
+        trooperInfoElement.classList.add('trooper-info');
+        trooperInfoElement.dataset.id = archivedTrooper.id;
+        trooperInfoElement.innerHTML = liInnerHtml;
+        archivedTrooperList.appendChild(trooperInfoElement);
+    }
+
+    // Change display text - "displaying n troopers" --> change the n
+    const displayText = document.querySelector("#archived-trooper-list .first-row em");
+    displayText.textContent = `Displaying ${archivedTroopers.length} troopers`
+
+    // Add event listeners to manage the unarchiving of troopers
+    onTrooperUnarchive();
+
+    // Add event listeners to manage the deleting of troopers
+    // onTrooperDelete();
+
+    // var searchInput = document.querySelector('.search')
+    // searchInput.addEventListener('keyup', function filterClients() {
+    //     // Declare variables
+    //     var filter, ul, li, clientName, i, txtValue;
+    //     filter = searchInput.value.toUpperCase();
+    //     li = document.querySelectorAll('#tosearch');
+
+    //     // Loop through all list items, and hide those who don't match the search query
+    //     for (i = 0; i < li.length; i++) {
+    //         clientName = li[i].querySelector('.info-text strong').innerText;
+    //         if (clientName.toUpperCase().indexOf(filter) > -1) {
+    //             li[i].style.display = "";
+    //         } else {
+    //             li[i].style.display = "none";
+    //         }
+    //     }
+    //     }
+    // )
+}
+
+
+
+// MAIN FUNCTION ON PAGE RELOAD
+async function loadPage() {
+    const result = await eel.get_troopers()();
+    const currentTroopers = result[0];
+    const archivedTroopers = result[1];
+    setCurrentTroopers(currentTroopers);
+    setArchivedTroopers(archivedTroopers);
+    addFormOnSubmit();
+    addLightboxes();
+}
+
+
+function addFormOnSubmit() {
+    
     // Manage the submit of add trooper form
     const addTrooperForm = document.querySelector('#add-trooper-form');
     addTrooperForm.addEventListener("submit", async function(event) {
@@ -197,11 +364,16 @@ document.addEventListener("DOMContentLoaded", async function() {
         try {
             var result = await eel.add_trooper(trooperInfo)();
             alert(result);
-            await getTroopers();
+            await loadPage();
         } catch (error) {
             console.log(error)
         }
         
     })
+}
 
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    loadPage();
 })

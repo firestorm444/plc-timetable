@@ -4,7 +4,7 @@
         <meta charset='utf-8' />
         <script type="text/javascript" src="/eel.js"></script>
         <script src="https://kit.fontawesome.com/ddf9b074ad.js" crossorigin="anonymous"></script>
-        
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
         <script type="text/javascript" src="/modal.js"></script>
         <script type="text/javascript" src="/edit-page.js"></script>
@@ -16,7 +16,7 @@
             <li class="link-active"><a href="edit-troopers.html">Edit Troopers </a></li>
         </ul>
 
-        <h2>Permanent troopers</h2>
+        <h2>Current Troopers</h2>
         <ul class="trooper-list" id="edit-trooper-list">
             <li class="first-row">
                 <em>Displaying _ troopers</em> 
@@ -25,12 +25,12 @@
                     <button class="trooper-btn add-btn">Add Trooper</button>
                     
                     <div class="overlay hidden"></div>
-                    <form class="trooper-form add-form page" id="add-trooper-form">
+                    <form class="trooper-form add-form page" id="add-trooper-form" action="">
                         <span class="modalClose">&times;</span>
                         <h2>Add Trooper</h2>
                         <div class="field">
                             <div class="label">Name</div>
-                            <input type="text" name="add-trooper-name" required>
+                            <input type="text" name="add-trooper-name" value="" required>
                         </div>
                         <div class="field">
                             <div class="label">Type</div>
@@ -217,6 +217,13 @@
             </li>
         </ul>
 
-
+        <h2>Archived Troopers</h2>
+        <ul class="trooper-list" id="archived-trooper-list">
+            <li class="first-row">
+                <em>Displaying _ troopers</em>
+                <input type="text" placeholder="Search for troopers" class="absence-reason search">
+            </li>
+        </ul>
+    
     </body>
 </html>

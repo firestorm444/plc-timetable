@@ -282,10 +282,6 @@ form .page .btns button {
 
 
 /* SSYLING OF FLASH MESSAGES */
-.hidden {
-    display: none;
-}
-
 .success-msg,
 .error-msg {
   margin: 10px 0;
@@ -441,7 +437,7 @@ form .page .btns button {
     margin-left: auto;
 }
 
-.icons > * {
+.icons > *:not(.overlay) {
     margin: 0 0 0 10px;
 }
 
@@ -632,4 +628,22 @@ form .page .btns button {
 
 .trooper-submit-btn button {
     margin-top: 0 !important;
+}
+
+
+.hidden {
+    display: none;
+}
+
+.absence-reason {
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 15px;
+    border: 2px solid grey;
+    width: 149px
+}
+
+.drag-icon {
+    margin: 0 10px 0 10px;
+    color: #333333
 }

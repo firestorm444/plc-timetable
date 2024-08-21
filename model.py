@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, select, func
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, select, func, delete
 from sqlalchemy.orm import declarative_base, relationship, Session
 
 engine = create_engine("sqlite+pysqlite:///timetable.db")

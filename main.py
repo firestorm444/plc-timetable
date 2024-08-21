@@ -13,7 +13,7 @@ all_troopers = {
         'present': True
     },
 
-    'jian july': {
+    'jian jun': {
         'type': 'combat',
         'status': 'stay-in',
         'permanent': True,
@@ -26,8 +26,8 @@ all_troopers = {
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': False,
-        'present': False,
-        'reason_for_absence': "AL"
+        'present': True,
+        # 'reason_for_absence': "AL"
     },
 
     'di er': {
@@ -38,13 +38,13 @@ all_troopers = {
         'present': True
     },
 
-    'nas': {
-        'type': 'combat',
-        'status': 'stay-in',
-        'permanent': False,
-        'excuse_rmj': False,
-        'present': True
-    },
+    # 'nas': {
+    #     'type': 'combat',
+    #     'status': 'stay-in',
+    #     'permanent': False,
+    #     'excuse_rmj': False,
+    #     'present': True
+    # },
 
     'xavier': {
         'type': 'service',
@@ -59,8 +59,7 @@ all_troopers = {
         'status': 'stay-in',
         'permanent': True,
         'excuse_rmj': True,
-        'present': False,
-        'reason_for_absence': 'AL'
+        'present': True,
     },
 
     'jun': {
@@ -77,7 +76,8 @@ all_troopers = {
         'status': 'stay-out',
         'permanent': True,
         'excuse_rmj': True,
-        'present': True,
+        'present': False,
+        'reason_for_absence': 'MC'
     },
 
     'joshua': {
@@ -85,8 +85,7 @@ all_troopers = {
         'status': 'stay-out',
         'permanent': True,
         'excuse_rmj': False,
-        'present': False,
-        'reason_for_absence': 'MC'
+        'present': True,
     },
 
     'aniish': {
@@ -471,25 +470,40 @@ def add_trooper(trooperInfo):
 
 
 @eel.expose
-def get_permanent_troopers():
-    troopers_query = session.execute(
+def get_troopers():
+    # Current troopers
+    current_troopers_query = session.execute(
         select(Trooper)
         .join(TrooperOrder)
         .filter(Trooper.archived == False)
         .order_by(TrooperOrder.id)).scalars().all()
 
-    troopers_list = []
-    for row in troopers_query:
-        troopers_list.append({
+    current_troopers_list = []
+    for row in current_troopers_query:
+        current_troopers_list.append({
             "id": row.id,
             "name": row.name,
             "trooper_type": row.trooper_type,
             "status": row.status,
-            "archived": row.archived,
             "excuse_rmj": row.excuse_rmj
         })
+    
+    # Archived troopers
+    archived_troopers_query = session.execute(
+        select(Trooper)
+        .join(TrooperOrder)
+        .filter(Trooper.archived == True)).scalars().all()
+    
+    archived_troopers_list = []
+    for row in archived_troopers_query:
+        archived_troopers_list.append({
+            "id": row.id,
+            "name": row.name,
+            "trooper_type": row.trooper_type,
+        })
 
-    return troopers_list
+
+    return [current_troopers_list, archived_troopers_list]
 
 
 @eel.expose
@@ -513,7 +527,49 @@ def edit_trooper(trooperInfo):
     except:
         raise Exception("Unable to add trooper to database")
 
+@eel.expose
+def archive_trooper(trooperId):
+    trooper = session.execute(
+        select(Trooper)
+        .filter_by(id=trooperId)).scalars().first()
+    
+    trooper.archived = True
+
+    try:
+        session.commit()
+        return 'Trooper archived successfully'
+    except:
+        raise Exception("Unable to archive trooper")
+
+
+@eel.expose
+def unarchive_trooper(trooperId):
+    trooper = session.execute(
+        select(Trooper)
+        .filter_by(id=trooperId)).scalars().first()
+    
+    trooper.archived = False
+
+    try:
+        session.commit()
+        return 'Trooper unarchived successfully'
+    except:
+        raise Exception("Unable to unarchive trooper")
+
+
+@eel.expose
+def delete_trooper(trooperId):
+    session.execute(
+        delete(Trooper)
+        .where(Trooper.id==trooperId))
+    
+    try:
+        session.commit()
+        return 'Trooper unarchived successfully'
+    except:
+        raise Exception("Unable to unarchive trooper")
+
 # print(convert_timetable_to_calendar_events())
-eel.start('timetable.html')
+eel.start('edit-troopers.html')
 
 
