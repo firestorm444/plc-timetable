@@ -11,6 +11,16 @@
         <link rel="stylesheet" href="timetable.css"></link>
     </head>
     <body>
+        <div class="success-msg hidden">
+        <i class="fa fa-check"></i>
+        <span></span>
+        </div>
+
+        <div class="error-msg hidden">
+        <i class="fa fa-times-circle"></i>
+        <span></span>
+        </div>
+
         <ul class="navbar">
             <li><a href="timetable.html">Generate Timetable</a></li>
             <li class="link-active"><a href="edit-troopers.html">Edit Troopers </a></li>
@@ -22,7 +32,10 @@
                 <em>Displaying _ troopers</em> 
                 <div>
                     <!-- <input type="text" placeholder="Search for clients" class="search"> -->
-                    <button class="trooper-btn add-btn">Add Trooper</button>
+                    <div class="icons">
+                        <button class="swap-button save-btn">Save Changes</button>
+                        <button class="trooper-btn add-btn">Add Trooper</button>
+                    </div>
                     
                     <div class="overlay hidden"></div>
                     <form class="trooper-form add-form page" id="add-trooper-form" action="">

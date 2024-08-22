@@ -7,11 +7,6 @@ Troopers:
 	contractType
 	excuseRmj
 
-ReinforcingTroopers
-	Id
-	StartDate
-	EndDate
-
 Roles:
 	Id
 	Name
@@ -38,7 +33,10 @@ DailyTroopers
 	Present
 	ReasonsForAbsence
 	
-	
-	
+ReinforcingTroopers
+	Id
+	StartDate
+	EndDate
+
 
 		

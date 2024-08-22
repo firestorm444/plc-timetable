@@ -1,5 +1,5 @@
 function capitalise(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+    return string.replace(/^./, string[0].toUpperCase())
 }
 
 function reloadLightboxes(iconName, containerName) {
@@ -19,6 +19,27 @@ function reloadLightboxes(iconName, containerName) {
             container.fadeOut(350);
         }
     });
+}
+
+function displayFlashMessage(message, type) {
+    const successMessage = document.querySelector('.success-msg');
+    const errorMessage = document.querySelector('.error-msg');
+    if (type=="success") {
+        successMessage.classList.remove('hidden');
+        errorMessage.classList.add('hidden');
+        successMessage.querySelector('span').textContent = message;
+        setTimeout(() => {
+            successMessage.classList.add('hidden');
+        }, 3000)
+        
+    } else {
+        successMessage.classList.add('hidden');
+        errorMessage.classList.remove('hidden');
+        errorMessage.querySelector('span').textContent = message;
+        setTimeout(() => {
+            errorMessage.classList.add('hidden');
+        }, 3000)
+    }
 }
 
 // SET CURRENT TROOPERS HELPER FUNCTIONS
@@ -45,10 +66,12 @@ function editFormsOnSubmit(editTrooperForms) {
 
             try {
                 var result = await eel.edit_trooper(trooperInfo)();
-                alert(result);
+                trooperForm.previousElementSibling.style.display = 'none';
+                trooperForm.style.display = 'none';
+                displayFlashMessage(result, "success");
                 await loadPage();
             } catch (error) {
-                console.log(error)
+                displayFlashMessage(error.errorText, "error");
             }
         })
     });
@@ -85,8 +108,13 @@ function onTrooperArchive() {
         const archiveButton = listElement.querySelector('.archive-btn');
         
         archiveButton.addEventListener('click', async function() {
-            const result = await eel.archive_trooper(trooperId);
-            loadPage();
+            try {
+                var result = await eel.archive_trooper(trooperId)();
+                displayFlashMessage(result, "success");
+                await loadPage();
+            } catch (error) {
+                displayFlashMessage(error.errorText, "error");
+            }
         })
 
     });
@@ -105,6 +133,7 @@ function setCurrentTroopers(currentTroopers) {
     // Create the li element and append the info to it
     for (let i = 0; i < currentTroopers.length; i++) {
         const trooper = currentTroopers[i];
+        console.log((trooper.is_permanent));
         var liInnerHtml = `
             <i class="fas fa-bars fa-2x drag-icon"></i>
             <div class="info-text">
@@ -124,7 +153,7 @@ function setCurrentTroopers(currentTroopers) {
                     <input type="hidden" name="edit-trooper-id" value=${trooper.id}>
                     <div class="field">
                         <div class="label">Name</div>
-                        <input type="text" name="edit-trooper-name" value=${trooper.name} required>
+                        <input type="text" name="edit-trooper-name" value="${trooper.name}" required>
                     </div>
                     <div class="field">
                         <div class="label">Type</div>
@@ -160,7 +189,7 @@ function setCurrentTroopers(currentTroopers) {
                     <div class="field">
                         <div class="label">Type</div>
                         <div class="toggle-switch">
-                            <input type="radio" name="edit-trooper-is-permanent" id="edit-trooper-permanent-${i}" class="option-1-input" value="true" ${trooper.is_permanent ? 'checked' : ''}>
+                            <input type="radio" name="edit-trooper-is-permanent" id="edit-trooper-permanent-${i}" class="option-1-input" value="true" ${(trooper.is_permanent) ? 'checked' : ''}>
                             <input type="radio" name="edit-trooper-is-permanent" id="edit-trooper-rf-${i}" class="option-2-input" value="false" ${(!trooper.is_permanent) ? 'checked' : ''}>
                                 <label for="edit-trooper-permanent-${i}" class="option option-1-label">
                                 <div class="dot"></div>
@@ -226,10 +255,9 @@ function setCurrentTroopers(currentTroopers) {
     var sortable = new Sortable(editTrooperList, {
         handle: ".drag-icon",
         animation: 150,
-    //     filter: '.first-row-edit',
-    //     // onMove: function (evt) {
-    //     //     return evt.related.className.indexOf('first-row-edit') === -1;
-    //     // }
+        // onMove: function (evt) {
+        //     console.log('terue');
+        // }
     });
 }
 
@@ -242,8 +270,13 @@ function onTrooperUnarchive() {
         const unarchiveButton = listElement.querySelector('.unarchive-btn');
 
         unarchiveButton.addEventListener('click', async function() {
-            const result = await eel.unarchive_trooper(trooperId);
-            loadPage();
+            try {
+                var result = await eel.unarchive_trooper(trooperId)();
+                displayFlashMessage(result, "success");
+                await loadPage();
+            } catch (error) {
+                displayFlashMessage(error.errorText, "error");
+            }
         })
 
     });
@@ -258,12 +291,15 @@ function onTrooperDelete() {
         deleteButton.addEventListener('click', async function() {
             let confirmation = confirm('Are you sure you want to delete the trooper? Only delete if he has ORD');
             if (confirmation) {
-                const result = await eel.delete_trooper(trooperId);
-                loadPage();
-            }
-            
+                try {
+                    var result = await eel.delete_trooper(trooperId)();
+                    displayFlashMessage(result, "success");
+                    await loadPage();
+                } catch (error) {
+                    displayFlashMessage(error.errorText, "error");
+                }
+            }      
         });
-
     });
 
 }
@@ -331,12 +367,18 @@ function setArchivedTroopers(archivedTroopers) {
 
 // MAIN FUNCTION ON PAGE RELOAD
 async function loadPage() {
-    const result = await eel.get_troopers()();
-    const currentTroopers = result[0];
-    const archivedTroopers = result[1];
-    setCurrentTroopers(currentTroopers);
-    setArchivedTroopers(archivedTroopers);
-    addLightboxes();
+    try {
+        const result = await eel.get_troopers()();
+        const currentTroopers = result[0];
+        const archivedTroopers = result[1];
+        setCurrentTroopers(currentTroopers);
+        setArchivedTroopers(archivedTroopers);
+        addLightboxes();
+        window.scrollTo(0,0);
+
+    } catch (error) {
+        displayFlashMessage(error.errorText, "error");
+    }
 }
 
 
@@ -362,18 +404,43 @@ function addFormOnSubmit() {
 
         try {
             var result = await eel.add_trooper(trooperInfo)();
-            alert(result);
-            loadPage();
+            addTrooperForm.previousElementSibling.style.display = 'none';
+            addTrooperForm.style.display = 'none';
+            displayFlashMessage(result, "success");
+            await loadPage();
         } catch (error) {
-            console.log(error)
+            displayFlashMessage(error.errorText, "error");
         }
-        
+
     })
+}
+
+
+async function saveTrooperOrder() {
+    const trooperOrder = []
+    const currentTroopers = document.querySelectorAll('#edit-trooper-list .trooper-info');
+    for (let i = 0; i < currentTroopers.length; i++) {
+        let trooper = currentTroopers[i];
+        trooperOrder.push(Number(trooper.dataset.id));
+    }
+
+    try {
+        var result = await eel.save_trooper_order(trooperOrder)();
+        displayFlashMessage(result, "success");
+        await loadPage();
+
+    } catch (error) {
+        displayFlashMessage(error.errorText);
+    }
+    
 }
 
 
 
 document.addEventListener("DOMContentLoaded", function() {
+    const saveChangesButton = document.querySelector('.save-btn');
+    saveChangesButton.addEventListener('click', saveTrooperOrder);
     addFormOnSubmit();
     loadPage();
+
 })

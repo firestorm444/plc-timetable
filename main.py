@@ -485,13 +485,13 @@ def get_troopers():
             "name": row.name,
             "trooper_type": row.trooper_type,
             "status": row.status,
-            "excuse_rmj": row.excuse_rmj
+            "excuse_rmj": row.excuse_rmj,
+            "is_permanent": row.is_permanent
         })
     
     # Archived troopers
     archived_troopers_query = session.execute(
         select(Trooper)
-        .join(TrooperOrder)
         .filter(Trooper.archived == True)).scalars().all()
     
     archived_troopers_list = []
@@ -523,7 +523,7 @@ def edit_trooper(trooperInfo):
 
     try:
         session.commit()
-        return 'Trooper added successfully'
+        return 'Trooper edited successfully'
     except:
         raise Exception("Unable to add trooper to database")
 
@@ -534,6 +534,20 @@ def archive_trooper(trooperId):
         .filter_by(id=trooperId)).scalars().first()
     
     trooper.archived = True
+
+    trooper_order = session.execute(
+        select(TrooperOrder)
+        .filter_by(trooper_id=trooperId)).scalars().first()
+    
+    # Decrease the order by 1 in database for records appearing after archived record
+    subsequent_troopers = session.execute(
+        select(TrooperOrder)
+        .filter(TrooperOrder.order > trooper_order.order)).scalars().all()
+    
+    for subsequent_trooper in subsequent_troopers:
+        subsequent_trooper.order = subsequent_trooper.order - 1
+
+    session.delete(trooper_order)
 
     try:
         session.commit()
@@ -550,6 +564,15 @@ def unarchive_trooper(trooperId):
     
     trooper.archived = False
 
+
+    # Add to Trooper Order:
+    order_num = session.query(TrooperOrder).count() + 1
+    trooper_order = TrooperOrder(
+        trooper_id = trooperId,
+        order = order_num
+    )
+    session.add(trooper_order)
+
     try:
         session.commit()
         return 'Trooper unarchived successfully'
@@ -563,12 +586,34 @@ def delete_trooper(trooperId):
         delete(Trooper)
         .where(Trooper.id==trooperId))
     
+    session.execute(
+        delete(TrooperOrder)
+        .where(TrooperOrder.trooper_id==trooperId))
+    
     try:
         session.commit()
-        return 'Trooper unarchived successfully'
+        return 'Trooper deleted successfully'
     except:
-        raise Exception("Unable to unarchive trooper")
+        raise Exception("Unable to delete trooper")
 
+
+@eel.expose
+def save_trooper_order(trooperOrder):
+    '''
+    Deletes all records in trooperOrder table and reconstructs it
+    '''
+    print(trooperOrder)
+
+    session.execute(delete(TrooperOrder))
+    for i in range(len(trooperOrder)):
+        session.add(TrooperOrder(trooper_id=trooperOrder[i], order=i+1))
+
+    try:
+        session.commit()
+        return 'Trooper order saved successfully'
+    except:
+        raise Exception("Unable to save trooper order")
+    
 # print(convert_timetable_to_calendar_events())
 eel.start('edit-troopers.html')
 
