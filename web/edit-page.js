@@ -416,30 +416,49 @@ function addFormOnSubmit() {
 }
 
 
-async function saveTrooperOrder() {
-    const trooperOrder = []
+async function saveTrooperChanges() {
     const currentTroopers = document.querySelectorAll('#edit-trooper-list .trooper-info');
+    var trooperOrder = [];
+    var trooperAttendance = new Map;
+
     for (let i = 0; i < currentTroopers.length; i++) {
         let trooper = currentTroopers[i];
-        trooperOrder.push(Number(trooper.dataset.id));
+        let trooperId = Number(trooper.dataset.id);
+
+        let trooperAbsent = trooper.querySelector('.present-icon').classList.contains('hidden');
+        let trooperPresent = trooper.querySelector('.absent-icon').classList.contains('hidden');
+
+        let indivTrooperAttendance = {}
+        indivTrooperAttendance.present = trooperPresent;
+
+        if (trooperAbsent) {
+            indivTrooperAttendance.reason_for_absence = trooper.querySelector('.absence-reason').value;
+        }
+
+        trooperOrder.push(trooperId);
+        trooperAttendance.set(trooperId, indivTrooperAttendance)
     }
+
+
+    trooperAttendance = Object.fromEntries(trooperAttendance);
+    console.log(trooperAttendance);
 
     try {
         var result = await eel.save_trooper_order(trooperOrder)();
+        var result2 = await eel.save_trooper_attendance(trooperAttendance)();
         displayFlashMessage(result, "success");
         await loadPage();
 
     } catch (error) {
         displayFlashMessage(error.errorText);
     }
-    
 }
 
 
 
 document.addEventListener("DOMContentLoaded", function() {
     const saveChangesButton = document.querySelector('.save-btn');
-    saveChangesButton.addEventListener('click', saveTrooperOrder);
+    saveChangesButton.addEventListener('click', saveTrooperChanges);
     addFormOnSubmit();
     loadPage();
 

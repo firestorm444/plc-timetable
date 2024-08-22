@@ -476,7 +476,7 @@ def get_troopers():
         select(Trooper)
         .join(TrooperOrder)
         .filter(Trooper.archived == False)
-        .order_by(TrooperOrder.id)).scalars().all()
+        .order_by(TrooperOrder.order)).scalars().all()
 
     current_troopers_list = []
     for row in current_troopers_query:
@@ -600,21 +600,41 @@ def delete_trooper(trooperId):
 @eel.expose
 def save_trooper_order(trooperOrder):
     '''
-    Deletes all records in trooperOrder table and reconstructs it
+    Deletes all records in trooperOrder table and reconstructs it if it differs from user input
     '''
     print(trooperOrder)
 
-    session.execute(delete(TrooperOrder))
-    for i in range(len(trooperOrder)):
-        session.add(TrooperOrder(trooper_id=trooperOrder[i], order=i+1))
+    current_trooper_order_query = session.execute(
+        select(TrooperOrder)
+        .order_by(TrooperOrder.order)).scalars().all()
 
-    try:
-        session.commit()
-        return 'Trooper order saved successfully'
-    except:
-        raise Exception("Unable to save trooper order")
+    current_trooper_order = []
+    for trooper_order in current_trooper_order_query:
+        current_trooper_order.append(trooper_order.trooper_id)
     
+    
+    if current_trooper_order != trooperOrder:
+        session.execute(delete(TrooperOrder))
+        for i in range(len(trooperOrder)):
+            session.add(TrooperOrder(trooper_id=trooperOrder[i], order=i+1))
+
+        try:
+            session.commit()
+            return 'Trooper order saved successfully'
+        except:
+            raise Exception("Unable to save trooper order")
+    else:
+        return 'Trooper order saved successfully'
+
+
+@eel.expose
+def save_trooper_attendance(trooper_attendance):
+    pprint.pprint(trooper_attendance)
+
+    return 'blomg'
+
 # print(convert_timetable_to_calendar_events())
 eel.start('edit-troopers.html')
+
 
 
