@@ -9,7 +9,7 @@ import xlsxwriter
 import datetime
 import json
 from dateutil.relativedelta import relativedelta, MO
-
+from pathlib import Path
 
 import itertools
 from ortools.sat.python import cp_model
@@ -867,7 +867,11 @@ def create_excel(filename, all_troopers, timetable, duty_timings, flag_troopers,
 
     # TODO
     duty_timings2 = [time(x) for x in range(7, 19)]
+    
+    Path("timetables").mkdir(exist_ok=True)
     workbook = xlsxwriter.Workbook(filename)
+
+    
     worksheet = workbook.add_worksheet()
 
     cell_format_dict = {'bold': True, 'italic': True, 'font_name': 'Arial', 'align': 'center'}

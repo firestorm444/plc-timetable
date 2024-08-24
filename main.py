@@ -281,7 +281,7 @@ def generate_global_timetable_variables():
     for trooper in troopers:
         blank_timetable[trooper] = ['' for j in range(len(duty_timings))]
     
-    pprint.pprint(all_troopers, sort_dicts=False)
+    # pprint.pprint(all_troopers, sort_dicts=False)
 
 
 
@@ -453,7 +453,7 @@ def assign_duty_timeslots_to_troopers(exportVal):
     morning_datetime = datetime.datetime.combine(datetime.date.today(), morning_time) - datetime.timedelta(hours=1)
     shift_blocks['morning'][1] = datetime.time(hour=morning_datetime.hour, minute=morning_datetime.minute)
     shift_blocks['afternoon'][0] = time.fromisoformat(exportVal['afternoonStartingTime'])
-    print(shift_blocks)
+    # print(shift_blocks)
 
     timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
 
@@ -464,10 +464,10 @@ def assign_specific_duties_to_troopers(eventsJson):
     global flag_troopers
     timetable = convert_calendar_events_to_timetable(eventsJson)
     timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
-    print_timetable(timetable, duty_timings)
+    # print_timetable(timetable, duty_timings)
 
     flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
-    print(breakfast, dinner, last_ensurer)
+    # print(breakfast, dinner, last_ensurer)
     return {
         'breakfast': breakfast,
         'dinner': dinner,
@@ -478,10 +478,10 @@ def assign_specific_duties_to_troopers(eventsJson):
 @eel.expose
 def export_timetable(exportData):
     duty_timetable = convert_calendar_events_to_timetable(exportData['duty'])
-    duty_filename = "trial/" + generate_filename("normal", timetable_date)
+    duty_filename = "timetables/" + generate_filename("normal", timetable_date)
 
     oc_duty_timetable = convert_calendar_events_to_timetable(exportData['OCDuty'])
-    oc_filename = "trial/" + generate_filename("OC", timetable_date)
+    oc_filename = "timetables/" + generate_filename("OC", timetable_date)
     
 
     create_excel(duty_filename, all_troopers, duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
@@ -509,7 +509,7 @@ def export_timetable(exportData):
 # EDIT TROOPERS
 @eel.expose
 def add_trooper(trooperInfo):
-    pprint.pprint(trooperInfo)
+    # pprint.pprint(trooperInfo)
     trooper = Trooper(
         name = trooperInfo["name"],
         trooper_type = trooperInfo["trooper_type"],
@@ -582,7 +582,7 @@ def get_troopers():
 
 @eel.expose
 def edit_trooper(trooperInfo):
-    print(trooperInfo)
+    # print(trooperInfo)
     trooper = session.execute(
         select(Trooper)
         .filter_by(id=int(trooperInfo['id']))
@@ -676,7 +676,7 @@ def save_trooper_order(trooperOrder):
     '''
     Deletes all records in trooperOrder table and reconstructs it if it differs from user input
     '''
-    print(trooperOrder)
+    # print(trooperOrder)
 
     current_trooper_order_query = session.execute(
         select(TrooperOrder)

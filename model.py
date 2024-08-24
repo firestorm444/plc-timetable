@@ -1,7 +1,19 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, select, func, delete
 from sqlalchemy.orm import declarative_base, relationship, Session
+import sys, os
 
-engine = create_engine("sqlite+pysqlite:///timetable.db")
+def resource_path(relative_path):      
+    """ Get absolute path to resource, works for dev and for PyInstaller """       
+    try:           # PyInstaller creates a temp folder and stores path in _MEIPASS           
+        base_path = sys._MEIPASS       
+    except Exception:           
+        base_path = os.path.abspath(".")       
+    return os.path.join(base_path, relative_path)
+
+
+db_path = resource_path("timetable.db")
+
+engine = create_engine(r"sqlite+pysqlite:///{}".format(db_path))
 session = Session(engine)
 Base = declarative_base()
 
