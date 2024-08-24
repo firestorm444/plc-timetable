@@ -141,9 +141,9 @@ function setCurrentTroopers(currentTroopers) {
                 <div class="trooper-type">${capitalise(trooper.trooper_type)}</div>
             </div> 
             <div class="icons">
-                <input type="text" placeholder="Enter absence reason" class="absence-reason hidden">
-                <div class="edit-icon absent-icon hidden"><i class="fas fa-calendar-times fa-2x absent"></i></div>
-                <div class="edit-icon present-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
+                <input type="text" placeholder="Enter absence reason" class="absence-reason ${(trooper.present) ? 'hidden' : ''}" value=${!(trooper.present) ? trooper.reason_for_absence : ''}>
+                <div class="edit-icon absent-icon ${(trooper.present) ? 'hidden' : ''}"><i class="fas fa-calendar-times fa-2x absent"></i></div>
+                <div class="edit-icon present-icon ${!(trooper.present) ? 'hidden' : ''}"><i class="fas fa-calendar-check fa-2x present"></i></div>
                 <button class="swap-button edit-btn">Edit Trooper</button>
                 <button class="swap-button archive-btn" style="background-color: red;">Archive</button>
                 <div class="overlay hidden"></div>
@@ -441,12 +441,10 @@ async function saveTrooperChanges() {
 
 
     trooperAttendance = Object.fromEntries(trooperAttendance);
-    console.log(trooperAttendance);
-
     try {
-        var result = await eel.save_trooper_order(trooperOrder)();
-        var result2 = await eel.save_trooper_attendance(trooperAttendance)();
-        displayFlashMessage(result, "success");
+        await eel.save_trooper_order(trooperOrder);
+        await eel.save_trooper_attendance(trooperAttendance);
+        displayFlashMessage('Successfully saved changes', "success");
         await loadPage();
 
     } catch (error) {
@@ -459,6 +457,12 @@ async function saveTrooperChanges() {
 document.addEventListener("DOMContentLoaded", function() {
     const saveChangesButton = document.querySelector('.save-btn');
     saveChangesButton.addEventListener('click', saveTrooperChanges);
+    document.addEventListener("keydown",  async function(e) {
+        if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.key == "s") {
+          e.preventDefault();
+          await saveTrooperChanges();
+        }
+      }, false);
     addFormOnSubmit();
     loadPage();
 

@@ -4,139 +4,142 @@ from dateutil import parser
 
 # INITIALISING VARIABLES
 duty_timings = [time(x) for x in range(6, 18)]
-all_troopers = {
-    'hakim': {
-        'type': 'combat',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True
-    },
+trooper_attendance = None
 
-    'jian jun': {
-        'type': 'combat',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True
-    },
+# TRIAL OF EDIT TROOPERS
+# all_troopers = {
+#     'hakim': {
+#         'type': 'combat',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True
+#     },
 
-    'kah fai': {
-        'type': 'combat',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True,
-        # 'reason_for_absence': "AL"
-    },
+#     'jian jun': {
+#         'type': 'combat',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True
+#     },
 
-    'di er': {
-        'type': 'combat',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True
-    },
+#     'kah fai': {
+#         'type': 'combat',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True,
+#         # 'reason_for_absence': "AL"
+#     },
 
-    # 'nas': {
-    #     'type': 'combat',
-    #     'status': 'stay-in',
-    #     'permanent': False,
-    #     'excuse_rmj': False,
-    #     'present': True
-    # },
+#     'di er': {
+#         'type': 'combat',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True
+#     },
 
-    'xavier': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True
-    },
+#     # 'nas': {
+#     #     'type': 'combat',
+#     #     'status': 'stay-in',
+#     #     'permanent': False,
+#     #     'excuse_rmj': False,
+#     #     'present': True
+#     # },
 
-    'aniq': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': True,
-        'present': True,
-    },
+#     'xavier': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True
+#     },
 
-    'jun': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': True,
-        'present': False,
-        'reason_for_absence': 'MC'
-    },
+#     'aniq': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': True,
+#         'present': True,
+#     },
 
-    "syafi'i": {
-        'type': 'service',
-        'status': 'stay-out',
-        'permanent': True,
-        'excuse_rmj': True,
-        'present': False,
-        'reason_for_absence': 'MC'
-    },
+#     'jun': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': True,
+#         'present': False,
+#         'reason_for_absence': 'MC'
+#     },
 
-    'joshua': {
-        'type': 'service',
-        'status': 'stay-out',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True,
-    },
+#     "syafi'i": {
+#         'type': 'service',
+#         'status': 'stay-out',
+#         'permanent': True,
+#         'excuse_rmj': True,
+#         'present': False,
+#         'reason_for_absence': 'MC'
+#     },
 
-    'aniish': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        # 'present': True
-        'present': False,
-        'reason_for_absence': 'MC'
-    },
+#     'joshua': {
+#         'type': 'service',
+#         'status': 'stay-out',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True,
+#     },
+
+#     'aniish': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         # 'present': True
+#         'present': False,
+#         'reason_for_absence': 'MC'
+#     },
     
-    'hilmi': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': True,
-        'present': True,
-        # 'reason_for_absence': 'MC'
-    },
+#     'hilmi': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': True,
+#         'present': True,
+#         # 'reason_for_absence': 'MC'
+#     },
 
-    'hugo': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True,
-    },
+#     'hugo': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True,
+#     },
 
-    'dhruva': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True,
-    },
+#     'dhruva': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True,
+#     },
 
-    'marc': {
-        'type': 'service',
-        'status': 'stay-in',
-        'permanent': True,
-        'excuse_rmj': False,
-        'present': True
-    },
-}
+#     'marc': {
+#         'type': 'service',
+#         'status': 'stay-in',
+#         'permanent': True,
+#         'excuse_rmj': False,
+#         'present': True
+#     },
+# }
 
-# Create present troopers dict
-troopers = {}
-for trooper_name in all_troopers.keys():
-    if all_troopers[trooper_name]['present'] is True:
-        troopers[trooper_name] = all_troopers[trooper_name]
+# # Create present troopers dict
+# troopers = {}
+# for trooper_name in all_troopers.keys():
+#     if all_troopers[trooper_name]['present'] is True:
+#         troopers[trooper_name] = all_troopers[trooper_name]
 
 
 # Sorted by standing followed by sitting ==> easier to add as a constraint (can use inequality constraints which is more optimised)
@@ -209,13 +212,13 @@ shift_blocks = {
 
 timetable_date = datetime.date.today() + datetime.timedelta(days=1)
 
-default_shift_distribution = determine_shift_distribution(troopers)
-shift_distribution = default_shift_distribution
+# default_shift_distribution = determine_shift_distribution(troopers)
+# shift_distribution = default_shift_distribution
 
-# GENERATE EMPTY TIMETABLE
-blank_timetable = {}
-for trooper in troopers:
-    blank_timetable[trooper] = ['' for j in range(len(duty_timings))]
+# # GENERATE EMPTY TIMETABLE
+# blank_timetable = {}
+# for trooper in troopers:
+#     blank_timetable[trooper] = ['' for j in range(len(duty_timings))]
 
 combined_roles = deepcopy(roles)
 for key, value in roles_placeholders.items():
@@ -235,6 +238,51 @@ for key, value in roles_placeholders.items():
 
 import eel
 eel.init('web')
+
+@eel.expose
+def generate_global_timetable_variables():
+    global all_troopers, troopers, default_shift_distribution, shift_distribution, blank_timetable
+
+    all_troopers_query = session.execute(
+        select(Trooper)
+        .join(TrooperOrder)
+        .filter(Trooper.archived == False)
+        .order_by(TrooperOrder.order)).scalars().all()
+    
+    all_troopers = {}
+    for trooper in all_troopers_query:
+        trooper_dict = {
+            'type': trooper.trooper_type,
+            'status': trooper.status,
+            'permanent': trooper.is_permanent,
+            'excuse_rmj': trooper.excuse_rmj,
+            # 'present': True
+        }
+        if trooper_attendance is None or trooper.id not in trooper_attendance:
+            # Set trooper to present by default
+            trooper_dict['present'] = True
+        else:
+            trooper_dict.update(trooper_attendance[trooper.id])
+        
+        all_troopers[trooper.name] = trooper_dict
+    
+
+    troopers = {}
+    for trooper_name in all_troopers.keys():
+        if all_troopers[trooper_name]['present'] is True:
+            troopers[trooper_name] = all_troopers[trooper_name]
+
+    default_shift_distribution = determine_shift_distribution(troopers)
+    shift_distribution = default_shift_distribution
+
+    # GENERATE EMPTY TIMETABLE
+    blank_timetable = {}
+    for trooper in troopers:
+        blank_timetable[trooper] = ['' for j in range(len(duty_timings))]
+    
+    pprint.pprint(all_troopers, sort_dicts=False)
+
+
 
 @eel.expose
 def convert_troopers_to_calendar_resources():
@@ -440,6 +488,7 @@ def export_timetable(exportData):
     
     return 'Successfully generated timetable'
 
+
 @eel.expose
 def add_trooper(trooperInfo):
     pprint.pprint(trooperInfo)
@@ -480,14 +529,21 @@ def get_troopers():
 
     current_troopers_list = []
     for row in current_troopers_query:
-        current_troopers_list.append({
+        trooper_dict = {
             "id": row.id,
             "name": row.name,
             "trooper_type": row.trooper_type,
             "status": row.status,
             "excuse_rmj": row.excuse_rmj,
             "is_permanent": row.is_permanent
-        })
+        }
+        if trooper_attendance is None or row.id not in trooper_attendance:
+            # Set trooper to present by default
+            trooper_dict['present'] = True
+        else:
+            trooper_dict.update(trooper_attendance[row.id])
+
+        current_troopers_list.append(trooper_dict)
     
     # Archived troopers
     archived_troopers_query = session.execute(
@@ -628,8 +684,9 @@ def save_trooper_order(trooperOrder):
 
 
 @eel.expose
-def save_trooper_attendance(trooper_attendance):
-    pprint.pprint(trooper_attendance)
+def save_trooper_attendance(trooperAttendanceJSON):
+    global trooper_attendance
+    trooper_attendance = {int(key): value for key, value in trooperAttendanceJSON.items()}
 
     return 'blomg'
 

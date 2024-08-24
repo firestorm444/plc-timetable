@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var refreshHours = false;
 
     // Get default parameters from python and set the timetable date
+    await eel.generate_global_timetable_variables();
     var defaultParameters = await eel.get_default_parameters()();
     var trooperKeys = defaultParameters.trooper_keys;
     var timetableDate = new Date(defaultParameters.timetable_date);
