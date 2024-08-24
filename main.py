@@ -1,6 +1,7 @@
 from timetable_scheduling import *
 from model import *
 from dateutil import parser
+import subprocess, os, platform
 
 # INITIALISING VARIABLES
 duty_timings = [time(x) for x in range(6, 18)]
@@ -486,9 +487,26 @@ def export_timetable(exportData):
     create_excel(duty_filename, all_troopers, duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
     create_excel(oc_filename, all_troopers, oc_duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
     
-    return 'Successfully generated timetable'
+    duty_path = os.path.abspath(duty_filename)
+    oc_path = os.path.abspath(oc_filename)
+
+    try:
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', duty_path))
+            subprocess.call(('open', oc_path))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(duty_path)
+            os.startfile(oc_path)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', duty_path))
+            subprocess.call(('xdg-open', oc_path))
+        return 'Successfully generated timetable. Opening the timetable files...'
+
+    except:
+        return 'Timetable generated successfully but unable to open the file'
 
 
+# EDIT TROOPERS
 @eel.expose
 def add_trooper(trooperInfo):
     pprint.pprint(trooperInfo)
@@ -688,7 +706,12 @@ def save_trooper_attendance(trooperAttendanceJSON):
     global trooper_attendance
     trooper_attendance = {int(key): value for key, value in trooperAttendanceJSON.items()}
 
-    return 'blomg'
+    try:
+        session.commit()
+        return 'Trooper attendance saved successfully'
+    except:
+        raise Exception("Unable to save trooper attendance")
+
 
 # print(convert_timetable_to_calendar_events())
 eel.start('edit-troopers.html')

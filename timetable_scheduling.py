@@ -999,7 +999,7 @@ def create_excel(filename, all_troopers, timetable, duty_timings, flag_troopers,
         row += 1
 
     # STYLING BOTTOM ROW
-    flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
+    # flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
 
     flag_text = 'FLAG:' + ' // '.join([trooper_name.upper() for trooper_name in flag_troopers])
 

@@ -131,7 +131,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         slotMinTime: "06:00:00",
         slotMaxTime: "18:00:00",
         eventTextColor: "black",
-        height: "auto",
+        contentHeight: 'auto',
+        expandRows: true,
         initialDate: timetableDate,
         headerToolbar: {
             start: 'title',
@@ -899,7 +900,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 var result = await eel.export_timetable(submitData)();
                 alert(result);
             } catch (error) {
-                
+                displayFlashMessage('error', error.errorText);
             }
             // setTimeout(function () {
             //     alert("Your Form Successfully Signed up");
