@@ -720,6 +720,15 @@ def save_trooper_attendance(trooperAttendanceJSON):
         raise Exception("Unable to save trooper attendance")
 
 
+
+# EDIT ROLES
+@eel.expose
+def get_roles():
+    all_roles = session.execute(
+        select(Trooper)
+        .join(TrooperOrder)
+        .filter(Trooper.archived == False)
+        .order_by(TrooperOrder.order)).scalars().all()
 # print(convert_timetable_to_calendar_events())
 eel.start('edit-troopers.html')
 

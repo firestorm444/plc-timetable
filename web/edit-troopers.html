@@ -8,7 +8,7 @@
         <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
         <script type="text/javascript" src="/modal.js"></script>
-        <script type="text/javascript" src="/edit-page.js"></script>
+        <script type="text/javascript" src="/edit-troopers.js"></script>
         <link rel="stylesheet" href="timetable.css"></link>
     </head>
     <body>
@@ -24,7 +24,8 @@
 
         <ul class="navbar">
             <li><a href="timetable.html">Generate Timetable</a></li>
-            <li class="link-active"><a href="edit-troopers.html">Edit Troopers </a></li>
+            <li class="link-active"><a href="edit-troopers.html">Edit Troopers</a></li>
+            <li><a href="edit-roles.html">Edit Roles</a></li>
         </ul>
 
         <h2>Current Troopers</h2>
@@ -35,11 +36,11 @@
                     <!-- <input type="text" placeholder="Search for clients" class="search"> -->
                     <div class="icons">
                         <button class="swap-button save-btn">Save Changes</button>
-                        <button class="trooper-btn add-btn">Add Trooper</button>
+                        <button class="swap-button add-trooper-btn" style="background-color: teal;">Add Trooper</button>
                     </div>
                     
                     <div class="overlay hidden"></div>
-                    <form class="trooper-form add-form page" id="add-trooper-form" action="">
+                    <form class="trooper-form add-trooper-form page" id="add-trooper-form" action="">
                         <span class="modalClose">&times;</span>
                         <h2>Add Trooper</h2>
                         <div class="field">
@@ -125,10 +126,10 @@
                     <!-- <input type="text" placeholder="Enter reason for absence"> -->
                     <div class="edit-icon"><i class="fas fa-calendar-times fa-2x absent hidden"></i></div>
                     <div class="edit-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
-                    <button class="swap-button edit-btn">Edit Trooper</button>
+                    <button class="swap-button edit-trooper-btn">Edit Trooper</button>
                     <button class="swap-button" style="background-color: red;">Archive</button>
                     <div class="overlay hidden"></div>
-                    <form action="" class="trooper-form edit-form page">
+                    <form action="" class="trooper-form edit-trooper-form page">
                         <span class="modalClose">&times;</span>
                         <h2>Edit Trooper</h2>
                         <div class="field">
@@ -215,10 +216,10 @@
                     <!-- <input type="text" placeholder="Enter reason for absence"> -->
                     <div class="edit-icon"><i class="fas fa-calendar-times fa-2x absent"></i></div>
                     <div class="edit-icon"><i class="fas fa-calendar-check fa-2x present"></i></div>
-                    <button class="trooper-btn edit-btn">Edit Trooper</button>
+                    <button class="trooper-btn edit-trooper-btn">Edit Trooper</button>
 
                     <div class="overlay hidden"></div>
-                    <form action="" class="trooper-form edit-form page">
+                    <form action="" class="trooper-form edit-trooper-form page">
                         <span class="modalClose">&times;</span>
                         <h2>Edit Trooper</h2>
                         

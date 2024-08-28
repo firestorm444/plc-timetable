@@ -144,10 +144,10 @@ function setCurrentTroopers(currentTroopers) {
                 <input type="text" placeholder="Enter absence reason" class="absence-reason ${(trooper.present) ? 'hidden' : ''}" value=${!(trooper.present) ? trooper.reason_for_absence : ''}>
                 <div class="edit-icon absent-icon ${(trooper.present) ? 'hidden' : ''}"><i class="fas fa-calendar-times fa-2x absent"></i></div>
                 <div class="edit-icon present-icon ${!(trooper.present) ? 'hidden' : ''}"><i class="fas fa-calendar-check fa-2x present"></i></div>
-                <button class="swap-button edit-btn">Edit Trooper</button>
+                <button class="swap-button edit-trooper-btn">Edit Trooper</button>
                 <button class="swap-button archive-btn" style="background-color: red;">Archive</button>
                 <div class="overlay hidden"></div>
-                <form action="" class="trooper-form edit-form page">
+                <form action="" class="trooper-form edit-trooper-form page">
                     <span class="modalClose">&times;</span>
                     <h2>Edit Trooper</h2>
                     <input type="hidden" name="edit-trooper-id" value=${trooper.id}>
@@ -238,10 +238,10 @@ function setCurrentTroopers(currentTroopers) {
     displayText.textContent = `Displaying ${currentTroopers.length} troopers`
     
     // Reload modals
-    reloadLightboxes('.edit-btn', '.edit-form');
+    reloadLightboxes('.edit-trooper-btn', '.edit-trooper-form');
     // addLightboxes();
     
-    const editTrooperForms = document.querySelectorAll('.edit-form');
+    const editTrooperForms = document.querySelectorAll('.edit-trooper-form');
     // Add event listeners to manage the submitting of edit forms
     editFormsOnSubmit(editTrooperForms);
 

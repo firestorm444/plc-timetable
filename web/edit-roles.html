@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8' />
+        <title>Edit Troopers</title>
+        <script type="text/javascript" src="/eel.js"></script>
+        <script src="https://kit.fontawesome.com/ddf9b074ad.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="/modal.js"></script>
+        <script type="text/javascript" src="/edit-roles.js"></script>
+        <link rel="stylesheet" href="timetable.css"></link>
+    </head>
+    <body>
+        <div class="success-msg hidden">
+        <i class="fa fa-check"></i>
+        <span></span>
+        </div>
+
+        <div class="error-msg hidden">
+        <i class="fa fa-times-circle"></i>
+        <span></span>
+        </div>
+
+        <ul class="navbar">
+            <li><a href="timetable.html">Generate Timetable</a></li>
+            <li><a href="edit-troopers.html">Edit Troopers</a></li>
+            <li class="link-active"><a href="edit-roles.html">Edit Roles</a></li>
+        </ul>
+
+        <h2>Permanent roles</h2>
+        <ul class="trooper-list" id="edit-role-list">
+            <li class="first-row">
+                <em>Displaying _ roles</em>
+                <div>
+                    <div class="icons">
+                        <button class="swap-button add-role-btn" style="background-color: teal;">Add Role</button>
+                    </div>
+                    <div class="overlay hidden"></div>
+                    <form class="trooper-form add-role-form page" action="">
+                        <span class="modalClose">&times;</span>
+                        <h2>Add Role</h2>
+                        <div class="field">
+                            <div class="label">Name</div>
+                            <input type="text" name="add-role-name" value="" required>
+                        </div>
+                        <div class="field">
+                            <div class="label">Colour</div>
+                            <input type="color" name="add-role-color" value="#333333" required>
+                        </div>
+                        
+                        <div class="field">
+                            <div class="label">Standing Role</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="add-role-is-standing" id="add-role-is-standing-yes" class="option-1-input" value="true" checked>
+                                <input type="radio" name="add-role-is-standing" id="add-role-is-standing-no" class="option-2-input" value="false">
+                                  <label for="add-role-is-standing-yes" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Yes</span>
+                                     </label>
+                                  <label for="add-role-is-standing-no" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>No</span>
+                                  </label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="label">Counted in hours</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="add-role-is-counted" id="add-role-is-counted-yes" class="option-1-input" value="true" checked>
+                                <input type="radio" name="add-role-is-counted" id="add-role-is-counted-no" class="option-2-input" value="false">
+                                  <label for="add-role-is-counted-yes" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Yes</span>
+                                     </label>
+                                  <label for="add-role-is-counted-no" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>No</span>
+                                  </label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="label">Custom/Uncommon Role</div>
+                            <div class="toggle-switch">
+                                <input type="radio" name="add-role-is-custom" id="add-role-is-custom-yes" class="option-1-input" value="true" checked>
+                                <input type="radio" name="add-role-is-custom" id="add-role-is-custom-no" class="option-2-input" value="false">
+                                  <label for="add-role-is-custom-yes" class="option option-1-label">
+                                    <div class="dot"></div>
+                                     <span>Yes</span>
+                                     </label>
+                                  <label for="add-role-is-custom-no" class="option option-2-label">
+                                    <div class="dot"></div>
+                                     <span>No</span>
+                                  </label>
+                            </div>
+                        </div>
+
+                        <div class="btn-field trooper-submit-btn">
+                            <button class="firstNext next" type="submit">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </li>
+
+
+        </ul>
+
+    </body>
+</html>

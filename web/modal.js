@@ -1,5 +1,5 @@
-const nested_icon_container_list = [['.edit-btn', '.edit-form']]
-const single_icon_container_list = [['.add-btn', '.add-form']];
+const nested_icon_container_list = [['.edit-trooper-btn', '.edit-trooper-form']]
+const single_icon_container_list = [['.add-trooper-btn', '.add-trooper-form'], ['.add-role-btn', '.add-role-form']];
 const icon_container_list = nested_icon_container_list.concat(single_icon_container_list);
 
 function addLightboxes() {
@@ -37,4 +37,4 @@ function addLightboxes() {
   })
 }
 
-// $(document).ready(addLightboxes);
+$(document).ready(addLightboxes);
