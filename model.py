@@ -2,16 +2,17 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time,
 from sqlalchemy.orm import declarative_base, relationship, Session
 import sys, os
 
-def resource_path(relative_path):      
-    """ Get absolute path to resource, works for dev and for PyInstaller """       
-    try:           # PyInstaller creates a temp folder and stores path in _MEIPASS           
-        base_path = sys._MEIPASS       
-    except Exception:           
-        base_path = os.path.abspath(".")       
-    return os.path.join(base_path, relative_path)
+# def resource_path(relative_path):      
+#     """ Get absolute path to resource, works for dev and for PyInstaller """       
+#     try:           # PyInstaller creates a temp folder and stores path in _MEIPASS           
+#         base_path = sys._MEIPASS       
+#     except Exception:           
+#         base_path = os.path.abspath(".")       
+#     return os.path.join(base_path, relative_path)
 
 
-db_path = resource_path("timetable.db")
+# db_path = resource_path("timetable.db")
+db_path = 'timetable.db'
 
 engine = create_engine(r"sqlite+pysqlite:///{}".format(db_path))
 session = Session(engine)
@@ -41,12 +42,17 @@ class Role(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128))
     color = Column(String(30))
+    is_standing = Column(Boolean)
+    is_counted_in_hours = Column(Boolean)
+    is_custom = Column(Boolean)
     timing = relationship("RoleTiming", back_populates="role")
+
 
 class RoleTiming(Base):
     __tablename__ = "role_timing"
     id = Column(Integer, primary_key=True, autoincrement=True)
     role_id = Column(Integer, ForeignKey("role.id"))
+    weekday = Column(String(30))
     timing = Column(Time)
     role = relationship("Role", back_populates="timing")
 
@@ -57,6 +63,11 @@ class GlobalSetting(Base):
     category = Column(String(256))
     name = Column(String(256))
     value = Column(String(256))
+
+
+# Things to add to global settings
+
+
 
 
 # Base.metadata.drop_all(engine)

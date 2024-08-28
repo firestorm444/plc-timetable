@@ -1,11 +1,17 @@
 from timetable_scheduling import *
 from model import *
 from dateutil import parser
-import subprocess, os, platform
+import subprocess, os, platform, sys
 
 # INITIALISING VARIABLES
 duty_timings = [time(x) for x in range(6, 18)]
 trooper_attendance = None
+
+
+# REDIRECT LOGs
+f = open(os.devnull, 'w')
+sys.stdout = f
+sys.stderr = f
 
 # TRIAL OF EDIT TROOPERS
 # all_troopers = {
@@ -421,6 +427,7 @@ def generate_sentry_for_calendar():
 
 @eel.expose
 def assign_shifts_and_hours_for_calendar(eventsJson):
+    print(eventsJson)
     global troopers
     timetable = convert_calendar_events_to_timetable(eventsJson)
     available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
@@ -431,7 +438,7 @@ def assign_shifts_and_hours_for_calendar(eventsJson):
     for value in troopers.values():
         hours_list.append(value['assigned_hours'])
 
-
+    print(hours_list)
     return {
         'hoursList': hours_list,
         'availableShifts': available_shifts,
@@ -676,7 +683,7 @@ def save_trooper_order(trooperOrder):
     '''
     Deletes all records in trooperOrder table and reconstructs it if it differs from user input
     '''
-    # print(trooperOrder)
+    print(trooperOrder)
 
     current_trooper_order_query = session.execute(
         select(TrooperOrder)

@@ -540,6 +540,7 @@ def or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_bl
                 model.add(duties[(p, t)] == 0)
 
             # Mark slot as taken if filled with anything else
+            # TODO: 
             elif timetable[trooper][t] != '':
                 model.add(duties[(p, t)] == 1)
         

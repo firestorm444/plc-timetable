@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
         for (let i = 0; i < nextButtons.length; i++) {
             nextButtons[i].addEventListener("click", async function (event) {
-                
+                console.log(i);
                 function onDataSuccess(newEvents=null) {
                     // If there are new events to add
                     if (newEvents !== null) {
@@ -770,7 +770,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // If confirm custom duties button clicked
                 if (i === 1) {
                     try {
+                        console.log('before');
                         var result = await eel.assign_shifts_and_hours_for_calendar(getCalendarEventsForTimetable())();
+                        console.log(result);
                         addAllAvailableShifts(result.availableShifts, trooperKeys, calendar);
                         addAllocatedShifts(result.allocatedShifts, trooperKeys);
                         addAllocatedHours(result.hoursList);
