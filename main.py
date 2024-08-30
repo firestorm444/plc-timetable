@@ -244,7 +244,7 @@ for key, value in roles_placeholders.items():
 # print_timetable(timetable, duty_timings)
 
 import eel
-eel.init('web')
+eel.init('web', js_result_timeout=30000000)
 
 @eel.expose
 def generate_global_timetable_variables():

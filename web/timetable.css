@@ -68,7 +68,7 @@ body {
     text-align: left;
 }
 
-.page .field .label {
+.label {
     /* position: absolute;
     top: -30px; */
     font-weight: 500;
@@ -457,6 +457,7 @@ form .page .btns button {
     transform: translate(-50%,-50%);
     /* box-shadow: 10px 10px 20px  rgb(178, 178, 178); */
     z-index: 2;
+    overflow-y: scroll;
 }
 
 .overlay {
@@ -646,4 +647,49 @@ form .page .btns button {
 .drag-icon {
     margin: 0 10px 0 10px;
     color: #333333
+}
+
+
+.weekday-time-pair select{
+    padding: 5px;
+    background-color: #333333;
+    color: #ffffff;
+    font-size: 18px;
+    border-radius: 5px;
+}
+
+.saved-role-timings-container {
+    width: 100%;
+    height: auto;
+    background-color: #f4f6f6;
+    border-radius: 10px;
+    border: 1px solid #808080;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 47.6px;
+}
+
+.saved-role-timings-container:empty::before {
+    content: 'Add timings for the role by clicking the button';
+    color: #808080;
+    margin-left: 10px;
+}
+
+.saved-role-timing {
+    background-color: #405cf5;
+    color: white;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    padding: 3px;
+    border-radius: 5px;
+    margin: 5px 3px;
+}
+
+.saved-role-timing span {
+    margin-right: 7px;
+    font-size: 25px;
+    cursor: pointer;
 }
