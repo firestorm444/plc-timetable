@@ -28,7 +28,76 @@ function saveRoleTiming(formElement) {
     })
 }
 
+
+function addRoleFormOnSubmit() {
+    // Manage the submit of add role form
+    const addRoleForm = document.querySelector('.add-role-form');
+    addRoleForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const formElements = addRoleForm.elements;
+        const roleName = formElements.namedItem("add-role-name").value;
+        const roleColor = formElements.namedItem("add-role-color").value;
+        const isStanding = formElements.namedItem("add-role-is-standing") === "true";
+        const isCounted = formElements.namedItem("add-role-is-counted") === "true";
+        const isCustom = formElements.namedItem("add-role-is-custom") === "true";
+
+
+        const roleTimingElements = addRoleForm.querySelectorAll('.saved-role-timings-container .saved-role-timing');
+        if (roleTimingElements.length == 0) {
+            alert('Please input at least 1 role timing');
+            return false;
+        }
+        
+        const roleTimings = [];
+        roleTimingElements.forEach(element => {
+            roleTimings.push([element.dataset.weekday, element.dataset.timing])
+        });
+
+        const roleInfo = {
+            "name": roleName,
+            "color": roleColor,
+            "is_standing": isStanding,
+            "is_counted_in_hours": isCounted,
+            "is_custom": isCustom,
+            "role_timings": roleTimings
+        }
+
+        console.log(roleInfo);
+
+        try {
+            var result = await eel.add_role(roleInfo)();
+            alert(result);
+            // addTrooperForm.previousElementSibling.style.display = 'none';
+            // addTrooperForm.style.display = 'none';
+            // displayFlashMessage(result, "success");
+            // await loadPage();
+        } catch (error) {
+            displayFlashMessage(error.errorText, "error");
+        }
+
+    })
+}
+
+async function loadPage() {
+    try {
+        const result = await eel.get_roles()();
+        const normalRoles = result[0];
+        const customRoles = result[1];
+        setNormalRoles(normalRoles);
+        // setCustomRoles(customRoles);
+        addLightboxes();
+        window.scrollTo(0,0);
+
+    } catch (error) {
+        displayFlashMessage(error.errorText, "error");
+    }
+}
+
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
     const addRoleForm = document.querySelector('.add-role-form');
+    addRoleFormOnSubmit();
     saveRoleTiming(addRoleForm)
 })

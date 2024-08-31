@@ -60,16 +60,23 @@ class RoleTiming(Base):
 class GlobalSetting(Base):
     __tablename__ = "global_setting"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    category = Column(String(256))
+    category_id = Column(Integer, ForeignKey("setting_category.id"))
+    category_index = Column(Integer)
     name = Column(String(256))
     value = Column(String(256))
+    category = relationship("SettingCategory", back_populates="setting")
+    
 
 
-# Things to add to global settings
+class SettingCategory(Base):
+    __tablename__ = "setting_category"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255))
+    setting = relationship("GlobalSetting", back_populates="category")
 
 
-
-
+# SettingCategory.__table__.drop(engine)
+# SettingCategory.__table__.create(engine)
 # Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 

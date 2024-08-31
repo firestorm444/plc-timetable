@@ -8,10 +8,10 @@ duty_timings = [time(x) for x in range(6, 18)]
 trooper_attendance = None
 
 
-# REDIRECT LOGs
-f = open(os.devnull, 'w')
-sys.stdout = f
-sys.stderr = f
+# REDIRECT LOGs - UNCOMMENT BEFORE EXPORT
+# f = open(os.devnull, 'w')
+# sys.stdout = f
+# sys.stderr = f
 
 # TRIAL OF EDIT TROOPERS
 # all_troopers = {
@@ -244,7 +244,7 @@ for key, value in roles_placeholders.items():
 # print_timetable(timetable, duty_timings)
 
 import eel
-eel.init('web', js_result_timeout=30000000)
+eel.init('web')
 
 @eel.expose
 def generate_global_timetable_variables():
@@ -722,14 +722,26 @@ def save_trooper_attendance(trooperAttendanceJSON):
 
 
 # EDIT ROLES
-@eel.expose
-def get_roles():
-    all_roles = session.execute(
-        select(Trooper)
-        .join(TrooperOrder)
-        .filter(Trooper.archived == False)
-        .order_by(TrooperOrder.order)).scalars().all()
+# @eel.expose
+# def get_roles():
+#     all_roles = session.execute(
+#         select(Trooper)
+#         .join(TrooperOrder)
+#         .filter(Trooper.archived == False)
+#         .order_by(TrooperOrder.order)).scalars().all()
 # print(convert_timetable_to_calendar_events())
+
+
+@eel.expose
+def add_role(roleInfo):
+    print('sdfsdfsdfsd')
+    pprint.pprint(roleInfo, sort_dicts=False)
+
+
+    return 'sdfsdfsdf'
+
+
+
 eel.start('edit-troopers.html')
 
 
