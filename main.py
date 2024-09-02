@@ -734,15 +734,68 @@ def save_trooper_attendance(trooperAttendanceJSON):
 
 @eel.expose
 def add_role(roleInfo):
-    print('sdfsdfsdfsd')
-    pprint.pprint(roleInfo, sort_dicts=False)
+    role_object = Role(name=roleInfo['name'], color=roleInfo['color'], is_standing=roleInfo['is_standing'], is_counted_in_hours=roleInfo['is_counted_in_hours'], is_custom=roleInfo['is_custom'])
+    session.add(role_object)
+    session.flush()
+
+    # PSEUDOCODE FOR ADDING ROLE TIMINGS
+    # First, remove the duplicate values if the user has accidentally added
+
+    # If all-week in role_timings, then disregard all other specific weekdays --> just add specific timings
+    # For eg: [all-week 0900, all-week 1000, mon 1000, tues 0900], mon 1000 and tues 0900 are ignored
+
+    # Create a dictionary to store all the other days information, eg:
+    # dict = {'monday': {1000, 1100, all-day}, 'tues': {0900, 0800, 1100}, ...} 
+    # where values in the dict are stored as a set to prevent timing duplication (from client-side error)
+    # For each weekday:
+        # If all-day in role_timings, disregard all other specific timings --> just add all-day
+        # Otherwise, add all specific timings
+
+    role_timing_objects = []
+    role_timings = [tuple(x) for x in roleInfo['role_timings']]
+    role_timings = list(set(role_timings))
+
+    role_weekdays = [x[0] for x in role_timings]
+    role_timings_dict = {}
+
+    for role_timing in role_timings:
+        weekday, timing = role_timing
+        if 'all-week' not in role_weekdays and weekday != 'all-week':
+            # Generate the dictionary
+            if weekday in role_timings_dict:
+                role_timings_dict[weekday].add(timing)
+            else:
+                role_timings_dict[weekday] = {timing}
+
+        else:
+            role_timing_objects.append(RoleTiming(role_id=role_object.id, weekday="all-week", timing=timing))
+
+    # print(role_timings_dict)
+
+    # Iterate through the dictionary keys (weekdays)
+    for weekday in role_timings_dict:
+        timing_set = role_timings_dict[weekday]
+        if 'all-day' in timing_set:
+            role_timing_objects.append(RoleTiming(role_id=role_object.id, weekday=weekday, timing="all-day"))
+        else:
+            for timing in timing_set:
+                role_timing_objects.append(RoleTiming(role_id=role_object.id, weekday=weekday, timing=timing))
+
+    for r in role_timing_objects:
+        print(r.timing)
+
+    try:
+        session.add_all(role_timing_objects)
+        session.commit()
+        return 'Role added successfully'
+    
+    except:
+        return 'An error occurred in adding role'
+    
 
 
-    return 'sdfsdfsdf'
 
-
-
-eel.start('edit-troopers.html')
+eel.start('edit-troopers.html', shutdown_delay=4)
 
 
 

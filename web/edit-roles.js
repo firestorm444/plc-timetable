@@ -37,9 +37,9 @@ function addRoleFormOnSubmit() {
         const formElements = addRoleForm.elements;
         const roleName = formElements.namedItem("add-role-name").value;
         const roleColor = formElements.namedItem("add-role-color").value;
-        const isStanding = formElements.namedItem("add-role-is-standing") === "true";
-        const isCounted = formElements.namedItem("add-role-is-counted") === "true";
-        const isCustom = formElements.namedItem("add-role-is-custom") === "true";
+        const isStanding = formElements.namedItem("add-role-is-standing").value === "true";
+        const isCounted = formElements.namedItem("add-role-is-counted").value === "true";
+        const isCustom = formElements.namedItem("add-role-is-custom").value === "true";
 
 
         const roleTimingElements = addRoleForm.querySelectorAll('.saved-role-timings-container .saved-role-timing');
@@ -47,7 +47,7 @@ function addRoleFormOnSubmit() {
             alert('Please input at least 1 role timing');
             return false;
         }
-        
+
         const roleTimings = [];
         roleTimingElements.forEach(element => {
             roleTimings.push([element.dataset.weekday, element.dataset.timing])

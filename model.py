@@ -53,7 +53,7 @@ class RoleTiming(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     role_id = Column(Integer, ForeignKey("role.id"))
     weekday = Column(String(30))
-    timing = Column(Time)
+    timing = Column(String(30))
     role = relationship("Role", back_populates="timing")
 
 
