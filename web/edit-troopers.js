@@ -133,7 +133,6 @@ function setCurrentTroopers(currentTroopers) {
     // Create the li element and append the info to it
     for (let i = 0; i < currentTroopers.length; i++) {
         const trooper = currentTroopers[i];
-        console.log((trooper.is_permanent));
         var liInnerHtml = `
             <i class="fas fa-bars fa-2x drag-icon"></i>
             <div class="info-text">

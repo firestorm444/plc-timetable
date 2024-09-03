@@ -722,14 +722,44 @@ def save_trooper_attendance(trooperAttendanceJSON):
 
 
 # EDIT ROLES
-# @eel.expose
-# def get_roles():
-#     all_roles = session.execute(
-#         select(Trooper)
-#         .join(TrooperOrder)
-#         .filter(Trooper.archived == False)
-#         .order_by(TrooperOrder.order)).scalars().all()
-# print(convert_timetable_to_calendar_events())
+@eel.expose
+def get_roles():
+    # const roleInfo = {
+    #         "name": roleName,
+    #         "color": roleColor,
+    #         "is_standing": isStanding,
+    #         "is_counted_in_hours": isCounted,
+    #         "is_custom": isCustom,
+    #         "role_timings": roleTimings
+    #     }
+
+    all_roles = session.execute(
+        select(Role)).scalars().all()
+    
+    normal_roles_json = []
+    custom_roles_json = []
+
+    for role_object in all_roles:
+        role_info = {
+            "name": role_object.name,
+            "color": role_object.color,
+            "is_standing": role_object.is_standing,
+            "is_counted_in_hours": role_object.is_counted_in_hours,
+        }
+
+        role_timing_objects = session.execute(
+            select(RoleTiming)
+            .where(RoleTiming.role_id == role_object.id)
+        ).scalars().all()
+
+        role_info['role_timings'] = [[role_timing.weekday, role_timing.timing] for role_timing in role_timing_objects]
+
+        if role_object.is_custom:
+            custom_roles_json.append(role_info)
+        else:
+            normal_roles_json.append(role_info)
+
+    return [normal_roles_json, custom_roles_json]
 
 
 @eel.expose
@@ -780,9 +810,6 @@ def add_role(roleInfo):
         else:
             for timing in timing_set:
                 role_timing_objects.append(RoleTiming(role_id=role_object.id, weekday=weekday, timing=timing))
-
-    for r in role_timing_objects:
-        print(r.timing)
 
     try:
         session.add_all(role_timing_objects)

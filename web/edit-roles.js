@@ -41,7 +41,6 @@ function addRoleFormOnSubmit() {
         const isCounted = formElements.namedItem("add-role-is-counted").value === "true";
         const isCustom = formElements.namedItem("add-role-is-custom").value === "true";
 
-
         const roleTimingElements = addRoleForm.querySelectorAll('.saved-role-timings-container .saved-role-timing');
         if (roleTimingElements.length == 0) {
             alert('Please input at least 1 role timing');
@@ -78,12 +77,36 @@ function addRoleFormOnSubmit() {
     })
 }
 
+function setNormalRoles(normalRoles) {
+    const normalRolesList = document.querySelector('#edit-role-list');
+
+    // Clear the role list except for first row
+    const elementsToDelete = normalRolesList.querySelectorAll('.trooper-info');
+    elementsToDelete.forEach(element => {
+        element.remove();
+    });
+
+    // Create the li element and append the info to it
+    for (let i = 0; i < normalRoles.length; i++) {
+        const normalRole = normalRoles[i];
+        var liInnerHtml = `
+            
+        
+        
+        
+        `
+        
+    }
+}
+
 async function loadPage() {
     try {
         const result = await eel.get_roles()();
         const normalRoles = result[0];
         const customRoles = result[1];
-        setNormalRoles(normalRoles);
+        console.log(normalRoles, customRoles)
+
+        // setNormalRoles(normalRoles);
         // setCustomRoles(customRoles);
         addLightboxes();
         window.scrollTo(0,0);
@@ -99,5 +122,6 @@ async function loadPage() {
 document.addEventListener('DOMContentLoaded', function() {
     const addRoleForm = document.querySelector('.add-role-form');
     addRoleFormOnSubmit();
+    loadPage();
     saveRoleTiming(addRoleForm)
 })
