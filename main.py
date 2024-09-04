@@ -741,6 +741,7 @@ def get_roles():
 
     for role_object in all_roles:
         role_info = {
+            "id": role_object.id,
             "name": role_object.name,
             "color": role_object.color,
             "is_standing": role_object.is_standing,
@@ -763,12 +764,7 @@ def get_roles():
     return [normal_roles_json, custom_roles_json]
 
 
-@eel.expose
-def add_role(roleInfo):
-    role_object = Role(name=roleInfo['name'], color=roleInfo['color'], is_standing=roleInfo['is_standing'], is_counted_in_hours=roleInfo['is_counted_in_hours'], is_custom=roleInfo['is_custom'])
-    session.add(role_object)
-    session.flush()
-
+def generate_role_timing_objects(role_timings_list, role_id):
     # PSEUDOCODE FOR ADDING ROLE TIMINGS
     # First, remove the duplicate values if the user has accidentally added
 
@@ -783,7 +779,7 @@ def add_role(roleInfo):
         # Otherwise, add all specific timings
 
     role_timing_objects = []
-    role_timings = [tuple(x) for x in roleInfo['role_timings']]
+    role_timings = [tuple(x) for x in role_timings_list]
     role_timings = list(set(role_timings))
 
     role_weekdays = [x[0] for x in role_timings]
@@ -799,7 +795,7 @@ def add_role(roleInfo):
                 role_timings_dict[weekday] = {timing}
 
         else:
-            role_timing_objects.append(RoleTiming(role_id=role_object.id, weekday="all-week", timing=timing))
+            role_timing_objects.append(RoleTiming(role_id=role_id, weekday="all-week", timing=timing))
 
     # print(role_timings_dict)
 
@@ -807,11 +803,23 @@ def add_role(roleInfo):
     for weekday in role_timings_dict:
         timing_set = role_timings_dict[weekday]
         if 'all-day' in timing_set:
-            role_timing_objects.append(RoleTiming(role_id=role_object.id, weekday=weekday, timing="all-day"))
+            role_timing_objects.append(RoleTiming(role_id=role_id, weekday=weekday, timing="all-day"))
         else:
             for timing in timing_set:
-                role_timing_objects.append(RoleTiming(role_id=role_object.id, weekday=weekday, timing=timing))
+                role_timing_objects.append(RoleTiming(role_id=role_id, weekday=weekday, timing=timing))
 
+    return role_timing_objects
+
+
+
+@eel.expose
+def add_role(roleInfo):
+    role_object = Role(name=roleInfo['name'], color=roleInfo['color'], is_standing=roleInfo['is_standing'], is_counted_in_hours=roleInfo['is_counted_in_hours'], is_custom=roleInfo['is_custom'])
+    session.add(role_object)
+    session.flush()
+
+    role_timing_objects = generate_role_timing_objects(roleInfo['role_timings'], role_object.id)
+    
     try:
         session.add_all(role_timing_objects)
         session.commit()
@@ -820,6 +828,54 @@ def add_role(roleInfo):
     except:
         return 'An error occurred in adding role'
     
+
+
+@eel.expose
+def edit_role(roleInfo):
+    role = session.execute(
+        select(Role)
+        .where(Role.id == roleInfo['id'])
+    ).scalars().first()
+
+    role.name = roleInfo['name']
+    role.color = roleInfo['color']
+    role.is_standing = roleInfo['is_standing']
+    role.is_counted_in_hours = roleInfo['is_counted_in_hours']
+    role.is_custom = roleInfo['is_custom']
+
+    role_timing_objects = generate_role_timing_objects(roleInfo['role_timings'], roleInfo['id'])
+
+    session.execute(
+        delete(RoleTiming)
+        .where(RoleTiming.role_id == roleInfo['id'])
+    )
+
+    session.add_all(role_timing_objects)
+
+    try:
+        session.commit()
+        return 'Role edited successfully'
+    except:
+        return 'An error occurred in editing role'
+
+
+@eel.expose
+def delete_role(role_id):
+    session.execute(
+        delete(Role)
+        .where(Role.id == role_id)
+    )
+
+    session.execute(
+        delete(RoleTiming)
+        .where(RoleTiming.role_id == role_id)
+    )
+
+    try:
+        session.commit()
+        return 'Role deleted successfully'
+    except:
+        return 'An error occurred in deleting role'
 
 
 

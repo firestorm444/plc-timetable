@@ -32,19 +32,19 @@ function saveRoleTiming(formElement) {
 }
 
 
-function addRoleFormOnSubmit() {
+function roleFormOnSubmit(type, roleForm) {
     // Manage the submit of add role form
-    const addRoleForm = document.querySelector('.add-role-form');
-    addRoleForm.addEventListener("submit", async function(event) {
+    // const addRoleForm = document.querySelector('.add-role-form');
+    roleForm.addEventListener("submit", async function(event) {
         event.preventDefault();
-        const formElements = addRoleForm.elements;
-        const roleName = formElements.namedItem("add-role-name").value;
-        const roleColor = formElements.namedItem("add-role-color").value;
-        const isStanding = formElements.namedItem("add-role-is-standing").value === "true";
-        const isCounted = formElements.namedItem("add-role-is-counted").value === "true";
-        const isCustom = formElements.namedItem("add-role-is-custom").value === "true";
+        const formElements = roleForm.elements;
+        const roleName = formElements.namedItem(`${type}-role-name`).value;
+        const roleColor = formElements.namedItem(`${type}-role-color`).value;
+        const isStanding = formElements.namedItem(`${type}-role-is-standing`).value === "true";
+        const isCounted = formElements.namedItem(`${type}-role-is-counted`).value === "true";
+        const isCustom = formElements.namedItem(`${type}-role-is-custom`).value === "true";
 
-        const roleTimingElements = addRoleForm.querySelectorAll('.saved-role-timings-container .saved-role-timing');
+        const roleTimingElements = roleForm.querySelectorAll('.saved-role-timings-container .saved-role-timing');
         if (roleTimingElements.length == 0) {
             alert('Please input at least 1 role timing');
             return false;
@@ -64,12 +64,22 @@ function addRoleFormOnSubmit() {
             "role_timings": roleTimings
         }
 
+        if (type === "edit") {
+            roleInfo.id = Number(formElements.namedItem("edit-role-id").value)
+        }
+
         console.log(roleInfo);
 
         try {
-            var result = await eel.add_role(roleInfo)();
-            addRoleForm.previousElementSibling.style.display = 'none';
-            addRoleForm.style.display = 'none';
+            if (type === "add") {
+                var result = await eel.add_role(roleInfo)();
+                roleForm.reset()
+            } else if (type === "edit") {
+                var result = await eel.edit_role(roleInfo)();
+            }
+            
+            roleForm.previousElementSibling.style.display = 'none';
+            roleForm.style.display = 'none';
             displayFlashMessage(result, "success");
             await loadPage();
         } catch (error) {
@@ -78,6 +88,7 @@ function addRoleFormOnSubmit() {
 
     })
 }
+
 
 function setRoles(roles, rolesListId) {
     const rolesList = document.querySelector(rolesListId);
@@ -102,6 +113,7 @@ function setRoles(roles, rolesListId) {
                 <form action="" class="trooper-form edit-role-form page">
                     <span class="modalClose">&times;</span>
                     <h2>Edit Role</h2>
+                    <input type="hidden" name="edit-role-id" value=${role.id}>
                     <div class="field">
                         <div class="label">Name</div>
                         <input type="text" name="edit-role-name" value="${role.name}" required>
@@ -215,10 +227,33 @@ function setRoles(roles, rolesListId) {
 
         // Allow save role timing functionality
         saveRoleTiming(roleInfoElement)
+
+        // Add onsubmit edit form
+        const editForm = roleInfoElement.querySelector('.edit-role-form');
+        roleFormOnSubmit('edit', editForm);
+
+        // Add onDelete
+        const deleteBtn = roleInfoElement.querySelector('.delete-btn')
+        deleteBtn.addEventListener('click', async function() {
+            let confirmation = confirm('Are you sure you want to delete the role?');
+            if (confirmation) {
+                try {
+                    var roleId = Number(roleInfoElement.dataset.id);
+                    var result = await eel.delete_role(roleId)();
+                    displayFlashMessage(result, "success");
+                    await loadPage();
+                } catch (error) {
+                    displayFlashMessage(error.errorText, "error");
+                }
+            }
+        })
     }
     // change display text - "displaying n troopers" --> change the n
     const displayText = rolesList.querySelector('.first-row em');
     displayText.textContent = `Displaying ${roles.length} roles`
+
+
+
 }
 
 async function loadPage() {
@@ -242,7 +277,7 @@ async function loadPage() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const addRoleForm = document.querySelector('.add-role-form');
-    addRoleFormOnSubmit();
+    roleFormOnSubmit('add', addRoleForm);
     loadPage();
-    saveRoleTiming(addRoleForm)
+    saveRoleTiming(addRoleForm);
 })

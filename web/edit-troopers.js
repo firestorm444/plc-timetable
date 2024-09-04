@@ -359,6 +359,7 @@ function addFormOnSubmit() {
 
         try {
             var result = await eel.add_trooper(trooperInfo)();
+            addTrooperForm.reset();
             addTrooperForm.previousElementSibling.style.display = 'none';
             addTrooperForm.style.display = 'none';
             displayFlashMessage(result, "success");
