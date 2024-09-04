@@ -745,6 +745,7 @@ def get_roles():
             "color": role_object.color,
             "is_standing": role_object.is_standing,
             "is_counted_in_hours": role_object.is_counted_in_hours,
+            "is_custom": role_object.is_custom
         }
 
         role_timing_objects = session.execute(
@@ -822,7 +823,7 @@ def add_role(roleInfo):
 
 
 
-eel.start('edit-troopers.html', shutdown_delay=4)
+eel.start('edit-troopers.html', shutdown_delay=3)
 
 
 

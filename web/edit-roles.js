@@ -1,3 +1,22 @@
+function addRoleTimingToContainer(parentElement, weekdayText, weekdayValue, timingText, timingValue) {
+    const savedRoleTimingElement = document.createElement('div');
+    savedRoleTimingElement.innerHTML = `
+        <span>&times;</span>
+        <div>${weekdayText + ' ' + timingText}</div>
+    `
+    savedRoleTimingElement.dataset.weekday = weekdayValue;
+    savedRoleTimingElement.dataset.timing = timingValue;
+    savedRoleTimingElement.classList.add('saved-role-timing');
+    
+    const savedRoleTimingContainer = parentElement.querySelector('.saved-role-timings-container');
+    savedRoleTimingContainer.appendChild(savedRoleTimingElement);
+
+    savedRoleTimingElement.querySelector('span').addEventListener('click', function() {
+        savedRoleTimingElement.remove();
+    })
+}
+
+
 function saveRoleTiming(formElement) {
     const addRoleTimingBtn = formElement.querySelector('.add-role-timing');
     addRoleTimingBtn.addEventListener('click', function() {
@@ -8,23 +27,7 @@ function saveRoleTiming(formElement) {
         const timeSelectOption = timeSelect.options[timeSelect.selectedIndex];
 
         console.log(weekdaySelectOption.value, timeSelectOption.value)
-
-
-        const savedRoleTimingElement = document.createElement('div');
-        savedRoleTimingElement.innerHTML = `
-            <span>&times;</span>
-            <div>${weekdaySelectOption.text + ' ' + timeSelectOption.text}</div>
-        `
-        savedRoleTimingElement.dataset.weekday = weekdaySelectOption.value;
-        savedRoleTimingElement.dataset.timing = timeSelectOption.value;
-        savedRoleTimingElement.classList.add('saved-role-timing');
-        
-        const savedRoleTimingContainer = formElement.querySelector('.saved-role-timings-container');
-        savedRoleTimingContainer.appendChild(savedRoleTimingElement);
-
-        savedRoleTimingElement.querySelector('span').addEventListener('click', function() {
-            savedRoleTimingElement.remove();
-        })
+        addRoleTimingToContainer(formElement, weekdaySelectOption.text, weekdaySelectOption.value, timeSelectOption.text, timeSelectOption.value);
     })
 }
 
@@ -65,11 +68,10 @@ function addRoleFormOnSubmit() {
 
         try {
             var result = await eel.add_role(roleInfo)();
-            alert(result);
-            // addTrooperForm.previousElementSibling.style.display = 'none';
-            // addTrooperForm.style.display = 'none';
-            // displayFlashMessage(result, "success");
-            // await loadPage();
+            addRoleForm.previousElementSibling.style.display = 'none';
+            addRoleForm.style.display = 'none';
+            displayFlashMessage(result, "success");
+            await loadPage();
         } catch (error) {
             displayFlashMessage(error.errorText, "error");
         }
@@ -77,26 +79,146 @@ function addRoleFormOnSubmit() {
     })
 }
 
-function setNormalRoles(normalRoles) {
-    const normalRolesList = document.querySelector('#edit-role-list');
+function setRoles(roles, rolesListId) {
+    const rolesList = document.querySelector(rolesListId);
 
     // Clear the role list except for first row
-    const elementsToDelete = normalRolesList.querySelectorAll('.trooper-info');
+    const elementsToDelete = rolesList.querySelectorAll('.trooper-info');
     elementsToDelete.forEach(element => {
         element.remove();
     });
 
     // Create the li element and append the info to it
-    for (let i = 0; i < normalRoles.length; i++) {
-        const normalRole = normalRoles[i];
+    for (let i = 0; i < roles.length; i++) {
+        const role = roles[i];
         var liInnerHtml = `
-            
-        
-        
-        
+            <div class="info-text">
+                <strong>${capitalise(role.name)}</strong>
+            </div>
+            <div class="icons">
+                <button class="swap-button edit-role-btn">Edit Role</button>
+                <button class="swap-button delete-btn" style="background-color: red;">Delete</button>
+                <div class="overlay hidden"></div>
+                <form action="" class="trooper-form edit-role-form page">
+                    <span class="modalClose">&times;</span>
+                    <h2>Edit Role</h2>
+                    <div class="field">
+                        <div class="label">Name</div>
+                        <input type="text" name="edit-role-name" value="${role.name}" required>
+                    </div>
+                    <div class="field">
+                        <div class="label">Colour</div>
+                        <input type="color" name="edit-role-color" value="${role.color}" required>
+                    </div>
+                    
+                    <div class="field">
+                        <div class="label">Standing Role</div>
+                        <div class="toggle-switch">
+                            <input type="radio" name="edit-role-is-standing" id="edit-role-is-standing-yes-${i}" class="option-1-input" value="true" ${(role.is_standing) ? 'checked' : ''}>
+                            <input type="radio" name="edit-role-is-standing" id="edit-role-is-standing-no-${i}" class="option-2-input" value="false" ${(!role.is_standing) ? 'checked' : ''}>
+                                <label for="edit-role-is-standing-yes-${i}" class="option option-1-label">
+                                <div class="dot"></div>
+                                    <span>Yes</span>
+                                    </label>
+                                <label for="edit-role-is-standing-no-${i}" class="option option-2-label">
+                                <div class="dot"></div>
+                                    <span>No</span>
+                                </label>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="label">Counted in hours</div>
+                        <div class="toggle-switch">
+                            <input type="radio" name="edit-role-is-counted" id="edit-role-is-counted-yes-${i}" class="option-1-input" value="true" ${(role.is_counted_in_hours) ? 'checked' : ''}>
+                            <input type="radio" name="edit-role-is-counted" id="edit-role-is-counted-no-${i}" class="option-2-input" value="false" ${(!role.is_counted_in_hours) ? 'checked' : ''}>
+                                <label for="edit-role-is-counted-yes-${i}" class="option option-1-label">
+                                    <div class="dot"></div>
+                                        <span>Yes</span>
+                                </label>
+                                <label for="edit-role-is-counted-no-${i}" class="option option-2-label">
+                                    <div class="dot"></div>
+                                        <span>No</span>
+                                </label>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="label">Custom/Uncommon Role</div>
+                        <div class="toggle-switch">
+                            <input type="radio" name="edit-role-is-custom" id="edit-role-is-custom-yes-${i}" class="option-1-input" value="true" ${(role.is_custom) ? 'checked' : ''}>
+                            <input type="radio" name="edit-role-is-custom" id="edit-role-is-custom-no-${i}" class="option-2-input" value="false" ${(!role.is_custom) ? 'checked' : ''}>
+                                <label for="edit-role-is-custom-yes-${i}" class="option option-1-label">
+                                    <div class="dot"></div>
+                                    <span>Yes</span>
+                                </label>
+                                <label for="edit-role-is-custom-no-${i}" class="option option-2-label">
+                                    <div class="dot"></div>
+                                    <span>No</span>
+                                </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="label">Role timings</div>
+                        <div class="saved-role-timings-container"></div>
+                        <div class="weekday-time-pair">
+                            <select class="add-role-weekday">
+                                <option value="all-week">All-week</option>
+                                <option value="monday">Monday</option>
+                                <option value="tuesday">Tuesday</option>
+                                <option value="wednesday">Wednesday</option>
+                                <option value="thursday">Thursday</option>
+                                <option value="friday">Friday</option>
+                            </select>
+
+                            <select class="add-role-time">
+                                <option value="all-day">All-day</option>
+                                <option value="0600">0600</option>
+                                <option value="0700">0700</option>
+                                <option value="0800">0800</option>
+                                <option value="0900">0900</option>
+                                <option value="1000">1000</option>
+                                <option value="1100">1100</option>
+                                <option value="1200">1200</option>
+                                <option value="1300">1300</option>
+                                <option value="1400">1400</option>
+                                <option value="1500">1500</option>
+                                <option value="1600">1600</option>
+                                <option value="1700">1700</option>
+                            </select>
+                            
+                            <button type="button" class="swap-button add-role-timing" style="background-color: teal;">Add Timing</button>
+                        </div>
+
+                    </div>
+
+                    <div class="btn-field trooper-submit-btn">
+                        <button class="firstNext next" type="submit">Submit</button>
+                    </div>
+                </form>
+            </div>
         `
-        
+        // Add the elements to the list
+        const roleInfoElement = document.createElement('li');
+        roleInfoElement.classList.add('trooper-info');
+        roleInfoElement.dataset.id = role.id;
+        roleInfoElement.innerHTML = liInnerHtml;
+        rolesList.appendChild(roleInfoElement);
+
+        // Add the role timings
+        for (let j = 0; j < role.role_timings.length; j++) {
+            const roleTiming = role.role_timings[j];
+            console.log(capitalise(roleTiming[0]))
+            addRoleTimingToContainer(roleInfoElement, capitalise(roleTiming[0]), roleTiming[0], capitalise(roleTiming[1]), roleTiming[1]);
+        }
+
+        // Allow save role timing functionality
+        saveRoleTiming(roleInfoElement)
     }
+    // change display text - "displaying n troopers" --> change the n
+    const displayText = rolesList.querySelector('.first-row em');
+    displayText.textContent = `Displaying ${roles.length} roles`
 }
 
 async function loadPage() {
@@ -104,10 +226,9 @@ async function loadPage() {
         const result = await eel.get_roles()();
         const normalRoles = result[0];
         const customRoles = result[1];
-        console.log(normalRoles, customRoles)
 
-        // setNormalRoles(normalRoles);
-        // setCustomRoles(customRoles);
+        setRoles(normalRoles, '#edit-normal-role-list');
+        setRoles(customRoles, '#edit-custom-role-list')
         addLightboxes();
         window.scrollTo(0,0);
 

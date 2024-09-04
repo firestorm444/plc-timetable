@@ -450,6 +450,7 @@ form .page .btns button {
     border-radius: 10px;
     padding: 0 30px 30px 30px;
     width: 70vw;
+    max-height: 90vh;
     background: #fff;
     position: fixed;
     top:50%;
@@ -457,7 +458,7 @@ form .page .btns button {
     transform: translate(-50%,-50%);
     /* box-shadow: 10px 10px 20px  rgb(178, 178, 178); */
     z-index: 2;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .overlay {

@@ -511,10 +511,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 hoursElement0.value = hoursElement1.value;
                 hoursElement1.value = tempHours;
 
-                displayFlashMessage("success")
+                displayTimetableFlashMessage("success")
                 
             } else {
-                displayFlashMessage("error", "Unable to swap shifts")
+                displayTimetableFlashMessage("error", "Unable to swap shifts")
             }
             
 
@@ -576,10 +576,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         if (userTotalHours !== totalHours) {
-            displayFlashMessage('error', `Calculated total hours of ${userTotalHours} does not match actual total hours of ${totalHours}`);
+            displayTimetableFlashMessage('error', `Calculated total hours of ${userTotalHours} does not match actual total hours of ${totalHours}`);
             return false;
         } else {
-            displayFlashMessage('success', 'Hours are matched')
+            displayTimetableFlashMessage('success', 'Hours are matched')
             return true;
         }
     }
@@ -603,13 +603,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         // console.log(userNumMorning, numMorning);
         // console.log(userNumAfternoon, numAfternoon)
         if (userNumAfternoon != numAfternoon) {
-            displayFlashMessage("error", `Number of afternoon troopers of ${userNumAfternoon} doesnt match the expected number of ${numAfternoon}`);
+            displayTimetableFlashMessage("error", `Number of afternoon troopers of ${userNumAfternoon} doesnt match the expected number of ${numAfternoon}`);
             return false;
         } else if (userNumMorning != numMorning){
-            displayFlashMessage("error", `Number of morning troopers of ${userNumMorning} doesnt match the expected number of ${numMorning}`);
+            displayTimetableFlashMessage("error", `Number of morning troopers of ${userNumMorning} doesnt match the expected number of ${numMorning}`);
             return false;
         } else {
-            displayFlashMessage("success");
+            displayTimetableFlashMessage("success");
             return true;
         }
     }
@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
  
     // FUNCTIONS FOR DISPLAYING FLASH MESSAGES
-    function displayFlashMessage(type, errorMessage=null) {
+    function displayTimetableFlashMessage(type, errorMessage=null) {
         const successElement = document.querySelector('.success-msg');
         const errorElement = document.querySelector('.error-msg');
         if (type=="success") {
@@ -761,9 +761,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                     try {
                         var newEvents = await eel.generate_sentry_for_calendar()();
                         onDataSuccess(newEvents)
-                        displayFlashMessage('success')
+                        displayTimetableFlashMessage('success')
                     } catch (error) {
-                        displayFlashMessage('error', error.errorText)
+                        displayTimetableFlashMessage('error', error.errorText)
                     }
                 }
 
@@ -777,7 +777,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         addAllocatedShifts(result.allocatedShifts, trooperKeys);
                         addAllocatedHours(result.hoursList);
                         onDataSuccess();
-                        displayFlashMessage('success');
+                        displayTimetableFlashMessage('success');
                         hoursElements.forEach(element => {
                             element.addEventListener('change', function () {
                                 validateTotalHours(defaultParameters.total_hours);
@@ -789,7 +789,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                         swapShifts(trooperKeys);
                     } catch (error) {
-                        displayFlashMessage('error', error.errorText)
+                        displayTimetableFlashMessage('error', error.errorText)
                     }
                 }
 
@@ -801,7 +801,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                             var newEvents = await eel.assign_duty_timeslots_to_troopers(exportVal)();
                             setNewCalendarEvents(newEvents)
                             onDataSuccess();
-                            displayFlashMessage('success');
+                            displayTimetableFlashMessage('success');
                             // calendar.setOption('resourceAreaColumns', [
                             //     {
                             //         field: 'title',
@@ -828,11 +828,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                             //     }])
                             refreshHours = true;
                         } catch (error) {
-                            displayFlashMessage('error', error.errorText);
+                            displayTimetableFlashMessage('error', error.errorText);
                         }
 
                     } else {
-                        displayFlashMessage('error', 'Unable to confirm hours and shifts due to invalid input')
+                        displayTimetableFlashMessage('error', 'Unable to confirm hours and shifts due to invalid input')
                     }
                 }
                 
@@ -841,23 +841,23 @@ document.addEventListener('DOMContentLoaded', async function() {
                         var result = await eel.assign_specific_duties_to_troopers(getCalendarEventsForTimetable())();
                         setNewCalendarEvents(result.newEvents);
                         onDataSuccess();
-                        displayFlashMessage('success');
+                        displayTimetableFlashMessage('success');
                         refreshHours = true;
                         updateMiscellaneousRoles(trooperKeys, result.breakfast, result.dinner, result.lastEnsurer);
                     } catch (error) {
-                        displayFlashMessage('error', error.errorText);
+                        displayTimetableFlashMessage('error', error.errorText);
                     }
                 }
 
                 if (i == 4) {
                     setNewCalendarEvents(calendar.getEvents());
                     onDataSuccess();
-                    displayFlashMessage('success');
+                    displayTimetableFlashMessage('success');
                 }
 
                 if (i == 5) {
                     onDataSuccess();
-                    displayFlashMessage('success');
+                    displayTimetableFlashMessage('success');
                 }
 
 
@@ -902,7 +902,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 var result = await eel.export_timetable(submitData)();
                 alert(result);
             } catch (error) {
-                displayFlashMessage('error', error.errorText);
+                displayTimetableFlashMessage('error', error.errorText);
             }
             // setTimeout(function () {
             //     alert("Your Form Successfully Signed up");
