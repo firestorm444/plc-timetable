@@ -465,7 +465,7 @@ def assign_sentry_duty(troopers, timetable, roles):
             combat_troopers.append(trooper)
 
     for role in roles:
-        if role == 'sentry':
+        if role['name'] == 'sentry':
             combat_count = len(combat_troopers)
             if combat_count == 4:
                 hour_distribution = [3,3,3,3]
@@ -1172,6 +1172,59 @@ def main_scheduling():
             'timing': [time(16), time(17)]
         }
     }
+
+#     roles = [
+#     {
+#         'id': 0,
+#         'name': 'in',
+#         'timing': 'whole-day',
+#         'color': '#ffff00'
+#     },
+#     {
+#         'id': 1,
+#         'name': 'out',
+#         'timing': 'whole-day',
+#         'color': '#ff9900'
+#     },
+#     {
+#         'id': 2,
+#         'name': 'SCA1',
+#         'timing': [time(7), time(8)],
+#         'color': '#ff00ff'
+#     },
+#     {
+#         'id': 3,
+#         'name': 'SCA2',
+#         'timing': [time(7), time(8)],
+#         'color': '#ff00ff'
+#     },
+#     {
+#         'id': 4,
+#         'name': 'sentry',
+#         'timing': 'whole-day',
+#         'color': '#ff0000'
+#     },
+#     {
+#         'id': 5,
+#         'name': 'x-ray',
+#         'timing': 'whole-day',
+#         'color': '#00ffff'
+#     },
+#     {
+#         'id': 6,
+#         'name': 'desk',
+#         'timing': 'whole-day',
+#         'color': '#00ff00'
+#     },
+#     {
+#         'id': 7,
+#         'name': 'PAC',
+#         'timing': [time(16), time(17)],
+#         'color': '#f4cccc'
+
+#     }
+# ]
+
     
     shift_blocks = {
         'morning': [time(6), time(13)],
