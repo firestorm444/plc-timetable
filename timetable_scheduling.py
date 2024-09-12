@@ -41,6 +41,10 @@ Notes from studying the timetables:
 - Random
 Aim for one large break between duties so not scattered
 '''
+def find_role(roles_list, value, filter_by='name'):
+    return next((item for item in roles_list if item[filter_by] == value), None)
+
+
 class TimetableInputError(Exception):
     pass
 
@@ -53,13 +57,13 @@ def compute_hours(duty_timings, troopers, roles):
     '''
     total_hours = 0
     num_troopers = len(troopers)
-
-    for role_name in roles:
-        role = roles[role_name]
-        if role['timing'] == "whole-day":
-            total_hours += len(duty_timings)
-        else:
-            total_hours += len(role['timing'])
+    for role in roles:
+        if role['is_counted_in_hours']:
+            if role['timing'] == "all-day":
+                total_hours += len(duty_timings)
+            else:
+                # TODO: make it more flexible - include actual hours
+                total_hours += len(role['timing'])
         
     average_hours = total_hours/len(troopers)
     
@@ -121,6 +125,7 @@ def find_all_available_shifts(timetable, duty_timings, troopers, min_hours=5):
 
     stayout: either late afternoon/afternoon
     '''
+    # TODO: make this customisable
     shift_blocks = {
         'morning': [time(6), time(12)],
         'late-morning': [time(8), time(14)],
@@ -383,18 +388,19 @@ def or_tools_select_shifts(possible_shifts, troopers, shift_blocks):
 
 
 
-def get_all_roles_for_timeslot(timeslot, roles):
+def get_all_role_indices_for_timeslot(timeslot, roles):
     '''
     Timeslot represents the hour of concern (eg time(13) represents the 13th hour of the day, ie from 1300 to 1400)
     '''
     timeslot_roles = []
-    for role_name, role_dict in roles.items():
-        if role_dict['timing'] == "whole-day" or timeslot in role_dict['timing']:
-            timeslot_roles.append(role_name)
+    for i, role in enumerate(roles):
+        if role['timing'] == "all-day" or timeslot in role['timing']:
+            # Here, append the index in the list instead of the actual id, makes it easier to link to timetable
+            timeslot_roles.append(i)
     
     return timeslot_roles
 
-
+## NOT IN USE
 def get_occupied_roles_for_timeslot(timeslot, duty_timings, timetable):
     timeslot_roles = []
     troopers_on_duty = []
@@ -407,8 +413,9 @@ def get_occupied_roles_for_timeslot(timeslot, duty_timings, timetable):
     
     return timeslot_roles, troopers_on_duty
 
+# NOT IN USE
 def get_vacant_roles_for_timeslot(timeslot, roles, duty_timings, timetable):
-    all_roles = get_all_roles_for_timeslot(timeslot, roles)
+    all_roles = get_all_role_indices_for_timeslot(timeslot, roles)
     occupied_roles = get_occupied_roles_for_timeslot(timeslot, duty_timings, timetable)[0]
 
     return list(set(all_roles) - set(occupied_roles))
@@ -575,7 +582,7 @@ def or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_bl
 
     # Sets the number of roles to be filled 
     for t in all_hours:
-        num_roles = len(get_all_roles_for_timeslot(duty_timings[t], roles))
+        num_roles = len(get_all_role_indices_for_timeslot(duty_timings[t], roles))
 
         model.add(sum(duties[(p, t)] for p in all_troopers) == num_roles)
         # print(t, sum(visualiser[(p,t)] for p in all_troopers))
@@ -602,24 +609,7 @@ def or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_bl
     model.minimize(sum(2 for p in all_troopers for t in range(num_hours-1) if duties[p,t] != duties[p, t+1])\
                    + sum(1 for p in all_troopers for t in range(num_hours-3) if duties[p,t] != duties[p, t+1] and duties[p,t+1] == duties[p, t+2] and duties[p, t] == duties[p, t+3]))
                     # + sum(1 for p in all_troopers for t in range(num_hours-3) if duties[p,t] != duties[p, t+3])\
-                    #  + sum(1 for p in all_troopers for t in range(num_hours-4) if duties[p,t] != duties[p, t+4]))
-    
-    
-    # pprint.pprint(visualiser)
-    # print(sum(5 for p in range(5) for t in range(8-1) if visualiser[p,t] != visualiser[p, t+1])\
-    #                + sum(4 for p in range(5) for t in range(8-2) if visualiser[p,t] != visualiser[p, t+2] and visualiser[p,t] != visualiser[p, t+1]))
-    #                 # + sum(1 for p in range(5) for t in range(8-3) if visualiser[p,t] != visualiser[p, t+3])\
-    #                 #  + sum(1 for p in range(5) for t in range(8-4) if visualiser[p,t] != visualiser[p, t+4]))
-    
-    
-    # Set up the objective function: minimising the number of gaps in schedule
-    # cost = 0
-    # for p in all_troopers:
-    #     test_list = list(visualiser[(p, t)] for p in all_troopers for)
-        
-        # res = [test_list[i] for i in range(0, len(test_list)) 
-
-        
+                    #  + sum(1 for p in all_troopers for t in range(num_hours-4) if duties[p,t] != duties[p, t+4])
 
     # model.export_to_file('bling2.txt')
 
@@ -646,7 +636,7 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
     all_troopers = range(num_troopers)
     all_hours = range(num_hours)
 
-    roles_keys = list(roles.keys())
+    role_names = [role['name'] for role in roles]
     timetable_keys = list(timetable.keys())
     troopers_keys = list(troopers.keys())
 
@@ -660,7 +650,7 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
     model = cp_model.CpModel()
     assigned_duties = {}
     for t in all_hours:
-        all_roles = [roles_keys.index(role) for role in get_all_roles_for_timeslot(duty_timings[t], roles)]
+        all_roles = get_all_role_indices_for_timeslot(duty_timings[t], roles)
         num_roles = len(all_roles)
         selected_trooper_indices = []
         
@@ -678,8 +668,8 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
                 
 
                 # Fix the duties that have been preselected
-                if current_duty in roles_keys:
-                    role_index = roles_keys.index(current_duty)
+                if current_duty in role_names:
+                    role_index = role_names.index(current_duty)
                     model.add(assigned_duties[(p,t)] == role_index)
 
         
@@ -698,7 +688,7 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
         # Set the first duty and last duty to be same across the first and last 2 timeshifts respectively
         # First duty:
         if (p,2) in assigned_duties.keys() and (p,1) in assigned_duties.keys() and (p,0) not in assigned_duties.keys():
-            model.add(assigned_duties[(p,1)] == roles_keys.index(f'SCA{counter}'))
+            model.add(assigned_duties[(p,1)] == role_names.index(f'SCA{counter}'))
             model.add(assigned_duties[(p,1)] == assigned_duties[(p,2)])
             to_update.extend([(p,1), (p,2)])
             counter += 1
@@ -770,7 +760,7 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
     if status in [cp_model.FEASIBLE, cp_model.OPTIMAL]:
         for assignment_tuple, role_index in assigned_duties.items():
             trooper_name = troopers_keys[assignment_tuple[0]]
-            role_assigned = roles_keys[solver.value(role_index)]
+            role_assigned = role_names[solver.value(role_index)]
             timetable[trooper_name][assignment_tuple[1]] = role_assigned
     
     else:
@@ -1133,12 +1123,12 @@ def main_scheduling():
     roles = {
         'in': {
             'duration': [1],
-            'timing': 'whole-day'
+            'timing': 'all-day'
         },
 
         'out': {
             'duration': [1],
-            'timing': 'whole-day'
+            'timing': 'all-day'
         },
 
         'SCA1': {
@@ -1153,18 +1143,18 @@ def main_scheduling():
 
         'sentry': {
             'duration': [2, 3],
-            'timing': 'whole-day'
+            'timing': 'all-day'
         },
 
         'x-ray': {
             'duration': [1],
-            'timing': 'whole-day'
+            'timing': 'all-day'
         },
 
 
         'desk': {
             'duration': [1],
-            'timing': 'whole-day'
+            'timing': 'all-day'
         },
 
         'PAC': {
@@ -1177,13 +1167,13 @@ def main_scheduling():
 #     {
 #         'id': 0,
 #         'name': 'in',
-#         'timing': 'whole-day',
+#         'timing': 'all-day',
 #         'color': '#ffff00'
 #     },
 #     {
 #         'id': 1,
 #         'name': 'out',
-#         'timing': 'whole-day',
+#         'timing': 'all-day',
 #         'color': '#ff9900'
 #     },
 #     {
@@ -1201,19 +1191,19 @@ def main_scheduling():
 #     {
 #         'id': 4,
 #         'name': 'sentry',
-#         'timing': 'whole-day',
+#         'timing': 'all-day',
 #         'color': '#ff0000'
 #     },
 #     {
 #         'id': 5,
 #         'name': 'x-ray',
-#         'timing': 'whole-day',
+#         'timing': 'all-day',
 #         'color': '#00ffff'
 #     },
 #     {
 #         'id': 6,
 #         'name': 'desk',
-#         'timing': 'whole-day',
+#         'timing': 'all-day',
 #         'color': '#00ff00'
 #     },
 #     {
@@ -1236,19 +1226,9 @@ def main_scheduling():
     timetable = {}
     for trooper in troopers:
         timetable[trooper] = ['' for j in range(len(duty_timings))]
-    
-    # previous_saved_state = deepcopy(timetable)
 
     timetable = assign_sentry_duty(troopers, timetable, roles)
     print_timetable(timetable, duty_timings)
-
-    # regenerate_sentry = input("\nRegenerate sentry? (y/n)")
-    # while regenerate_sentry == 'y':
-    #     timetable = deepcopy(previous_saved_state)
-    #     assign_sentry_duty(troopers, timetable, roles)
-    #     print_timetable(timetable, duty_timings)
-    #     regenerate_sentry = input("\nRegenerate sentry? (y/n)")
-
 
     ### TIMETABLE TESTING
     # timetable['dhruva'][0:2] = ['desk'] * (2-0)
@@ -1265,7 +1245,7 @@ def main_scheduling():
     # timetable["syafi'i"][10:12] = ['x-ray', 'x-ray']
     # timetable['kah fai'][10:12] = ['out', 'out']
     # timetable['aniq'][10:12] = ['desk', 'desk']
-    timetable['hilmi'][0:6] = ['desk', 'desk', 'out', 'x-ray', 'out', 'desk']
+    # timetable['hilmi'][0:6] = ['desk', 'desk', 'out', 'x-ray', 'out', 'desk']
 
 
     # timetable['xavier'][0:2] = ['in'] * (2-0)
@@ -1275,7 +1255,6 @@ def main_scheduling():
     # timetable['hilmi'][0:2] = ['SCA2'] * (2-0)
     # timetable['aniq'][0:2] = ['out'] * (2-0)
     # timetable['aniish'][0:2] = ['x-ray'] * (2-0)
-    
 
 
     # ### Shift testing
@@ -1294,7 +1273,6 @@ def main_scheduling():
     # troopers['hakim']['shift'] = 'afternoon'
 
 
-    # 5 morning, 5 afternoon, 1 late morning, 2 random
     total_hours, average_hours, hour_distribution = compute_hours(duty_timings, troopers, roles)
     print(compute_hours(duty_timings, troopers, roles))
 
@@ -1306,7 +1284,6 @@ def main_scheduling():
     shift_distribution = determine_shift_distribution(troopers)
     allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
     pprint.pprint(allocated_shifts)
-
     # allocated_shifts = json.loads(input('Enter the finalised shifts'))
 
     troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles)
@@ -1315,33 +1292,24 @@ def main_scheduling():
     # troopers, allocated_shifts = or_tools_select_shifts(possible_shifts, troopers, shift_blocks)
     # pprint.pprint(allocated_shifts)
     # generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles)
-
-    
-   
-
-    
     # pprint.pprint(troopers)
-
-
 
     timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
     print_timetable(timetable, duty_timings)
 
     timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
     print_timetable(timetable, duty_timings)
-    # print(get_all_roles_for_timeslot(time(17), roles))
+    # print(get_all_role_indices_for_timeslot(time(17), roles))
     # print(get_occupied_roles_for_timeslot(time(17), duty_timings, timetable))
     # print(get_vacant_roles_for_timeslot(time(17), roles, duty_timings, timetable))
-
-
-    # allocated_shifts = allocate_shifts()
 
     # generate_duty_hours(troopers, timetable, duty_timings, shift_blocks)
     # print_timetable(timetable, duty_timings)
     
-    print(allocate_miscellaneous_roles(all_troopers, timetable))
     flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
-    create_excel('trial.xlsx', all_troopers, timetable, duty_timings, flag_troopers, breakfast, dinner, last_ensurer)
+    print(breakfast, dinner, last_ensurer)
+
+    # create_excel('trial.xlsx', all_troopers, timetable, duty_timings, flag_troopers, breakfast, dinner, last_ensurer)
 
 
 if __name__ == "__main__":

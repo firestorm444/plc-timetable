@@ -79,18 +79,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     let counter = 0;
     let fullCalendarDraggables = []
     let draggableContainer = document.querySelector('.draggable-container')
-    for (const role in defaultParameters.roles) {
-        const roleObject = defaultParameters.roles[role];
-        if (role == 'None' || role == 'TODO') {
-            var eventTitle = roleObject.name
+
+    for (let i = 0; i < defaultParameters.roles.length; i++) {
+        const role = defaultParameters.roles[i];
+        if (role.name == 'None' || role.name == 'TODO') {
+            var eventTitle = role.calendar_name
         } else {
-            var eventTitle = role
+            var eventTitle = role.name
         }
 
         // Create a new draggable element
         let draggableElement = document.createElement('div');
         draggableElement.classList.add('draggable');
-        draggableElement.style.backgroundColor = roleObject.color;
+        draggableElement.style.backgroundColor = role.color;
         draggableElement.innerText = eventTitle;
 
         draggableContainer.appendChild(draggableElement);
@@ -101,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             eventData: {
                 title: eventTitle,
                 duration: '01:00',
-                color: roleObject.color,
+                color: role.color,
                 borderColor: 'black',
             }
         })

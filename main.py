@@ -150,66 +150,146 @@ trooper_attendance = None
 
 
 # Sorted by standing followed by sitting ==> easier to add as a constraint (can use inequality constraints which is more optimised)
-roles = {
-    'in': {
-        'duration': [1],
-        'timing': 'whole-day',
-        'color': '#ffff00'
-    },
+# roles = {
+#     'in': {
+#         'duration': [1],
+#         'timing': 'all-day',
+#         'color': '#ffff00',
+#     },
 
-    'out': {
-        'duration': [1],
-        'timing': 'whole-day',
-        'color': '#ff9900'
-    },
+#     'out': {
+#         'duration': [1],
+#         'timing': 'all-day',
+#         'color': '#ff9900'
+#     },
 
-    'SCA1': {
-        'duration': [1],
+#     'SCA1': {
+#         'duration': [1],
+#         'timing': [time(7), time(8)],
+#         'color': '#ff00ff'
+#     },
+
+#     'SCA2': {
+#         'duration': [1],
+#         'timing': [time(7), time(8)],
+#         'color': '#ff00ff'
+#     },
+
+#     'sentry': {
+#         'duration': [2, 3],
+#         'timing': 'all-day',
+#         'color': '#ff0000'
+#     },
+
+#     'x-ray': {
+#         'duration': [1],
+#         'timing': 'all-day',
+#         'color': '#00ffff'
+#     },
+
+#     'desk': {
+#         'duration': [1],
+#         'timing': 'all-day',
+#         'color': '#00ff00'
+#     },
+
+#     'PAC': {
+#         'duration': [2],
+#         'timing': [time(16), time(17)],
+#         'color': '#f4cccc'
+#     }
+# }
+
+roles = [
+    {
+        'name': 'in',
+        'timing': 'all-day',
+        'color': '#ffff00',
+        'is_standing': True,
+        'is_counted_in_hours': True,
+        'is_custom': False
+    },
+    {
+        'name': 'out',
+        'timing': 'all-day',
+        'color': '#ff9900',
+        'is_standing': True,
+        'is_counted_in_hours': True,
+        'is_custom': False
+    },
+    {
+        'name': 'SCA1',
         'timing': [time(7), time(8)],
-        'color': '#ff00ff'
+        'color': '#ff00ff',
+        'is_standing': True,
+        'is_counted_in_hours': True,
+        'is_custom': False
     },
-
-    'SCA2': {
-        'duration': [1],
+    {
+        'name': 'SCA2',
         'timing': [time(7), time(8)],
-        'color': '#ff00ff'
+        'color': '#ff00ff',
+        'is_standing': True,
+        'is_counted_in_hours': True,
+        'is_custom': False
     },
-
-    'sentry': {
-        'duration': [2, 3],
-        'timing': 'whole-day',
-        'color': '#ff0000'
+    {
+        'name': 'sentry',
+        'timing': 'all-day',
+        'color': '#ff0000',
+        'is_standing': False,
+        'is_counted_in_hours': True,
+        'is_custom': False
     },
-
-    'x-ray': {
-        'duration': [1],
-        'timing': 'whole-day',
-        'color': '#00ffff'
+    {
+        'name': 'x-ray',
+        'timing': 'all-day',
+        'color': '#00ffff',
+        'is_standing': False,
+        'is_counted_in_hours': True,
+        'is_custom': False
     },
-
-    'desk': {
-        'duration': [1],
-        'timing': 'whole-day',
-        'color': '#00ff00'
+    {
+        'name': 'desk',
+        'timing': 'all-day',
+        'color': '#00ff00',
+        'is_standing': False,
+        'is_counted_in_hours': True,
+        'is_custom': False
     },
-
-    'PAC': {
-        'duration': [2],
+    {
+        'name': 'PAC',
         'timing': [time(16), time(17)],
-        'color': '#f4cccc'
+        'color': '#f4cccc',
+        'is_standing': False,
+        'is_counted_in_hours': True,
+        'is_custom': False
     }
-}
+]
 
-roles_placeholders = {
-    "None": {
+# roles_placeholders = {
+#     "None": {
+#         'color': 'grey',
+#         'calendar_name': 'nil'
+#     },
+#     "TODO": {
+#         'color': '#2E8857',
+#         'calendar_name': 'duty'
+#     }
+# }
+
+roles_placeholders = [
+    {
+        'name': 'None',
         'color': 'grey',
-        'name': 'nil'
+        'calendar_name': 'nil'
     },
-    "TODO": {
+    {
+        'name': 'TODO',
         'color': '#2E8857',
-        'name': 'duty'
+        'calendar_name': 'duty'
     }
-}
+]
 
 shift_blocks = {
     'morning': [time(6), time(13)],
@@ -228,8 +308,7 @@ timetable_date = datetime.date.today() + datetime.timedelta(days=1)
 #     blank_timetable[trooper] = ['' for j in range(len(duty_timings))]
 
 combined_roles = deepcopy(roles)
-for key, value in roles_placeholders.items():
-    combined_roles[key] = value
+combined_roles.extend(roles_placeholders)
 
 
 # Sequence of generation:
@@ -245,6 +324,9 @@ for key, value in roles_placeholders.items():
 
 import eel
 eel.init('web')
+
+def generate_roles_dict():
+    pass
 
 @eel.expose
 def generate_global_timetable_variables():
@@ -366,7 +448,7 @@ def convert_timetable_to_calendar_events(timetable):
                     "title": duty_name,
                     "start": initial_datetime.isoformat(sep=' '),
                     "end": final_datetime.isoformat(sep=' '),
-                    "backgroundColor": combined_roles[roles_key]['color'],
+                    "backgroundColor": find_role(combined_roles, roles_key)['color'],
                 })
 
                 # print(trooper_name, trooper_index, duty_name, initial_datetime, final_datetime)
@@ -427,7 +509,6 @@ def generate_sentry_for_calendar():
 
 @eel.expose
 def assign_shifts_and_hours_for_calendar(eventsJson):
-    print(eventsJson)
     global troopers
     timetable = convert_calendar_events_to_timetable(eventsJson)
     available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
