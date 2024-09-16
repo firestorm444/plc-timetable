@@ -394,7 +394,7 @@ def get_all_role_indices_for_timeslot(timeslot, roles):
     '''
     timeslot_roles = []
     for i, role in enumerate(roles):
-        if role['timing'] == "all-day" or timeslot in role['timing']:
+        if (role['timing'] == "all-day" or timeslot in role['timing']) and role['is_custom'] is False:
             # Here, append the index in the list instead of the actual id, makes it easier to link to timetable
             timeslot_roles.append(i)
     

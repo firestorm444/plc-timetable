@@ -75,10 +75,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         })
     }
 
+    // TODO: Modify to add for both custom and normal roles
     // Set up draggable elements
     let counter = 0;
     let fullCalendarDraggables = []
-    let draggableContainer = document.querySelector('.draggable-container')
+    let normalDraggableContainer = document.querySelector('.normal-roles-draggable-container')
+    let customDraggableContainer = document.querySelector('.custom-roles-draggable-container')
 
     for (let i = 0; i < defaultParameters.roles.length; i++) {
         const role = defaultParameters.roles[i];
@@ -94,7 +96,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         draggableElement.style.backgroundColor = role.color;
         draggableElement.innerText = eventTitle;
 
-        draggableContainer.appendChild(draggableElement);
+        if (role.is_custom) {
+            customDraggableContainer.appendChild(draggableElement)
+        } else {
+            normalDraggableContainer.appendChild(draggableElement)
+        }
 
     
         // Link draggable element to fullcalendar

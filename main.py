@@ -264,6 +264,14 @@ roles = [
         'is_standing': False,
         'is_counted_in_hours': True,
         'is_custom': False
+    },
+    {
+        'name': 'MC',
+        'timing': 'all-day',
+        'color': '#f4cccc',
+        'is_standing': False,
+        'is_counted_in_hours': False,
+        'is_custom': True
     }
 ]
 

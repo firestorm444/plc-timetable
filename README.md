@@ -135,4 +135,11 @@ Allocate miscellaneous roles with the following rules:
 | Dinner | The last out draws dinner, and if the last out is a stayout or is not a permanent trooper, the last in draws instead |
 
 
-After confirming the miscellaneous roles, export the timetable using `create_excel`
+After confirming the miscellaneous roles, export the timetable using `create_excel`. The `create_excel` function takes reference from a pre-existing template that is usually used to make the timetables.
+
+
+# Stage 2: Building a front-end UI
+
+
+
+# Stage 3: Improvements on v1

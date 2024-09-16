@@ -1,3 +1,29 @@
+function addCustomUserValidation(type, formElement) {
+    let isCustomField = formElement.querySelector('.is-custom-field');
+    let countedInHoursField = formElement.querySelector('-counted-in-hours-field');
+
+    const formElements = formElement.elements;
+    const isCountedElement = formElements.namedItem(`${type}-role-is-counted`)
+    const isCounted = isCountedElement.value === "true";
+    
+    const isCustomElement = formElements.namedItem(`${type}-role-is-custom`);
+    const isCustom = isCustomElement.value === "true";
+
+    // Since its a radioNodeList, need to add event listener for both elements
+    isCountedElement.forEach(element => {
+        element.addEventListener('change', function() {
+            if (isCustom) {
+                isCustomField.style.display = 'block';
+            } else {
+                countedInHoursField.style.display = 'none';
+                isCountedElement.value = 'true';
+            }
+        });
+    });
+    
+
+}
+
 function addRoleTimingToContainer(parentElement, weekdayText, weekdayValue, timingText, timingValue) {
     const savedRoleTimingElement = document.createElement('div');
     savedRoleTimingElement.innerHTML = `
@@ -19,6 +45,7 @@ function addRoleTimingToContainer(parentElement, weekdayText, weekdayValue, timi
 
 function saveRoleTiming(formElement) {
     const addRoleTimingBtn = formElement.querySelector('.add-role-timing');
+    console.log(addRoleTimingBtn);
     addRoleTimingBtn.addEventListener('click', function() {
         const weekdaySelect = formElement.querySelector('.add-role-weekday');
         const timeSelect = formElement.querySelector('.add-role-time');
@@ -30,6 +57,7 @@ function saveRoleTiming(formElement) {
         addRoleTimingToContainer(formElement, weekdaySelectOption.text, weekdaySelectOption.value, timeSelectOption.text, timeSelectOption.value);
     })
 }
+
 
 
 function roleFormOnSubmit(type, roleForm) {
@@ -140,22 +168,6 @@ function setRoles(roles, rolesListId) {
                     </div>
 
                     <div class="field">
-                        <div class="label">Counted in hours</div>
-                        <div class="toggle-switch">
-                            <input type="radio" name="edit-role-is-counted" id="edit-role-is-counted-yes-${i}" class="option-1-input" value="true" ${(role.is_counted_in_hours) ? 'checked' : ''}>
-                            <input type="radio" name="edit-role-is-counted" id="edit-role-is-counted-no-${i}" class="option-2-input" value="false" ${(!role.is_counted_in_hours) ? 'checked' : ''}>
-                                <label for="edit-role-is-counted-yes-${i}" class="option option-1-label">
-                                    <div class="dot"></div>
-                                        <span>Yes</span>
-                                </label>
-                                <label for="edit-role-is-counted-no-${i}" class="option option-2-label">
-                                    <div class="dot"></div>
-                                        <span>No</span>
-                                </label>
-                        </div>
-                    </div>
-
-                    <div class="field">
                         <div class="label">Custom/Uncommon Role</div>
                         <div class="toggle-switch">
                             <input type="radio" name="edit-role-is-custom" id="edit-role-is-custom-yes-${i}" class="option-1-input" value="true" ${(role.is_custom) ? 'checked' : ''}>
@@ -167,6 +179,22 @@ function setRoles(roles, rolesListId) {
                                 <label for="edit-role-is-custom-no-${i}" class="option option-2-label">
                                     <div class="dot"></div>
                                     <span>No</span>
+                                </label>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="label">Counted in hours</div>
+                        <div class="toggle-switch">
+                            <input type="radio" name="edit-role-is-counted" id="edit-role-is-counted-yes-${i}" class="option-1-input" value="true" ${(role.is_counted_in_hours) ? 'checked' : ''}>
+                            <input type="radio" name="edit-role-is-counted" id="edit-role-is-counted-no-${i}" class="option-2-input" value="false" ${(!role.is_counted_in_hours) ? 'checked' : ''}>
+                                <label for="edit-role-is-counted-yes-${i}" class="option option-1-label">
+                                    <div class="dot"></div>
+                                        <span>Yes</span>
+                                </label>
+                                <label for="edit-role-is-counted-no-${i}" class="option option-2-label">
+                                    <div class="dot"></div>
+                                        <span>No</span>
                                 </label>
                         </div>
                     </div>
@@ -278,6 +306,7 @@ async function loadPage() {
 document.addEventListener('DOMContentLoaded', function() {
     const addRoleForm = document.querySelector('.add-role-form');
     roleFormOnSubmit('add', addRoleForm);
+    addCustomUserValidation('add', addRoleForm)
     loadPage();
     saveRoleTiming(addRoleForm);
 })

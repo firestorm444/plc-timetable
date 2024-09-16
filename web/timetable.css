@@ -267,6 +267,20 @@ form .page .btns button {
     padding: 3px;
 }
 
+.custom-roles-draggable-container .custom-label {
+    background-color: grey;
+    padding: 4px;
+    margin: 1px;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.custom-roles-draggable-container {
+    justify-content: space-between;
+}
+
+
 .draggable {
     cursor: pointer;
     font-size: 14px;
