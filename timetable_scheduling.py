@@ -45,7 +45,7 @@ def find_role(roles_list, value, filter_by='name'):
     return next((item for item in roles_list if item[filter_by] == value), None)
 
 def role_is_custom_and_not_counted(roles_list, value):
-    if value == '':
+    if value in ['', 'TODO'] or value is None:
         return False
     role = find_role(roles_list, value)
     return role['is_custom'] and not role['is_counted_in_hours']
@@ -666,7 +666,7 @@ def or_tools_role_assignment(troopers, duty_timings, timetable, roles, last_stan
         for p in all_troopers:
             trooper_name = timetable_keys[p]
             current_duty = timetable[trooper_name][t]
-            if current_duty is not None and current_duty != '':
+            if current_duty is not None and current_duty != '' and not role_is_custom_and_not_counted(roles, current_duty):
                 # Create integer model variables for each selected shift
                 domain_1 = cp_model.Domain.from_values(all_roles)
                 assigned_duties[(p,t)] = model.new_int_var_from_domain(domain_1, f"duties_{p}_{t}")

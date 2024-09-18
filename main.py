@@ -568,7 +568,7 @@ def assign_specific_duties_to_troopers(eventsJson):
     global flag_troopers
     timetable = convert_calendar_events_to_timetable(eventsJson)
     timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
-    # print_timetable(timetable, duty_timings)
+    print_timetable(timetable, duty_timings)
 
     flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
     # print(breakfast, dinner, last_ensurer)
