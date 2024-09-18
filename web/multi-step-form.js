@@ -97,7 +97,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         draggableElement.innerText = eventTitle;
 
         if (role.is_custom) {
-            customDraggableContainer.appendChild(draggableElement)
+            let customIcon = customDraggableContainer.querySelector('.custom-label');
+            customIcon.insertAdjacentElement('afterend', draggableElement)
         } else {
             normalDraggableContainer.appendChild(draggableElement)
         }

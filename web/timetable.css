@@ -708,3 +708,8 @@ form .page .btns button {
     font-size: 25px;
     cursor: pointer;
 }
+
+.addInputButton {
+    color: grey;
+    cursor: pointer;
+}

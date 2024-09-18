@@ -1,22 +1,24 @@
 function addCustomUserValidation(type, formElement) {
-    let isCustomField = formElement.querySelector('.is-custom-field');
-    let countedInHoursField = formElement.querySelector('-counted-in-hours-field');
+    // let isCustomField = formElement.querySelector('.is-custom-field');
+    // let countedInHoursField = formElement.querySelector('.counted-in-hours-field');
 
     const formElements = formElement.elements;
-    const isCountedElement = formElements.namedItem(`${type}-role-is-counted`)
-    const isCounted = isCountedElement.value === "true";
-    
-    const isCustomElement = formElements.namedItem(`${type}-role-is-custom`);
-    const isCustom = isCustomElement.value === "true";
+    const isCustomElements = formElements.namedItem(`${type}-role-is-custom`);
+    const isCountedElements = formElements.namedItem(`${type}-role-is-counted`)
 
     // Since its a radioNodeList, need to add event listener for both elements
-    isCountedElement.forEach(element => {
-        element.addEventListener('change', function() {
+    isCustomElements.forEach(element => {
+        element.addEventListener('click', function() {
+            const isCustom = isCustomElements.value === "true";
+            
+            // If its a custom role, can be either counted or not counted in hours
+            // If its a normal role, must be counted in hours
             if (isCustom) {
-                isCustomField.style.display = 'block';
+                isCountedElements.forEach(element => {element.disabled = false})
             } else {
-                countedInHoursField.style.display = 'none';
-                isCountedElement.value = 'true';
+                // countedInHoursField.style.display = 'none';
+                isCountedElements.forEach(element => {element.disabled = true})
+                isCountedElements.value = 'true';
             }
         });
     });
@@ -45,7 +47,6 @@ function addRoleTimingToContainer(parentElement, weekdayText, weekdayValue, timi
 
 function saveRoleTiming(formElement) {
     const addRoleTimingBtn = formElement.querySelector('.add-role-timing');
-    console.log(addRoleTimingBtn);
     addRoleTimingBtn.addEventListener('click', function() {
         const weekdaySelect = formElement.querySelector('.add-role-weekday');
         const timeSelect = formElement.querySelector('.add-role-time');
@@ -239,6 +240,7 @@ function setRoles(roles, rolesListId) {
                 </form>
             </div>
         `
+
         // Add the elements to the list
         const roleInfoElement = document.createElement('li');
         roleInfoElement.classList.add('trooper-info');
@@ -259,6 +261,9 @@ function setRoles(roles, rolesListId) {
         // Add onsubmit edit form
         const editForm = roleInfoElement.querySelector('.edit-role-form');
         roleFormOnSubmit('edit', editForm);
+
+        // Add user validation
+        addCustomUserValidation('edit', editForm)
 
         // Add onDelete
         const deleteBtn = roleInfoElement.querySelector('.delete-btn')
