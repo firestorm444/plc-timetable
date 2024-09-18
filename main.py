@@ -266,7 +266,15 @@ roles = [
         'is_custom': False
     },
     {
-        'name': 'MC',
+        'name': 'MR',
+        'timing': 'all-day',
+        'color': '#f4cccc',
+        'is_standing': False,
+        'is_counted_in_hours': False,
+        'is_custom': True
+    },
+    {
+        'name': 'MA',
         'timing': 'all-day',
         'color': '#f4cccc',
         'is_standing': False,
@@ -519,7 +527,7 @@ def generate_sentry_for_calendar():
 def assign_shifts_and_hours_for_calendar(eventsJson):
     global troopers
     timetable = convert_calendar_events_to_timetable(eventsJson)
-    available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
+    available_shifts = find_all_available_shifts(timetable, duty_timings, troopers, roles)
     allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
     troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles)
 

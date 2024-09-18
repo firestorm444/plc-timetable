@@ -44,6 +44,12 @@ Aim for one large break between duties so not scattered
 def find_role(roles_list, value, filter_by='name'):
     return next((item for item in roles_list if item[filter_by] == value), None)
 
+def role_is_custom_and_not_counted(roles_list, value):
+    if value == '':
+        return False
+    role = find_role(roles_list, value)
+    return role['is_custom'] and not role['is_counted_in_hours']
+
 
 class TimetableInputError(Exception):
     pass
@@ -117,7 +123,7 @@ def print_timetable(timetable, duty_timings):
     # if all falls in morning ==> morning
     # if all falls in afternoon ==> afternoon (this and one above are ifs not elifs)
 
-def find_all_available_shifts(timetable, duty_timings, troopers, min_hours=5):
+def find_all_available_shifts(timetable, duty_timings, troopers, roles, min_hours=5):
     '''
     Analyses the timetable and assigns shifts for different troopers
     To assign 4 morning, 4 afternoon, 2 late morning, rest random
@@ -145,7 +151,7 @@ def find_all_available_shifts(timetable, duty_timings, troopers, min_hours=5):
             duty_name = individual_timetable[duty_index]
             if duty_name != '': # if a duty is assigned
                 if time_range[0] <= duty_timing and time_range[1] >= duty_timing: #if the duty lies in the range for the shift
-                    if duty_name == None: # if the duty has been blocked out, increase the none count
+                    if duty_name == None or role_is_custom_and_not_counted(roles, duty_name): # if the duty has been blocked out, increase the none count
                         none_count += 1
                 else:
                     return False # return false if the duty falls out of the range of shift as this means because of this 1 duty it is not true that every single assigned duty lies in the shift
@@ -161,6 +167,8 @@ def find_all_available_shifts(timetable, duty_timings, troopers, min_hours=5):
     #All troopers can have random shifts (shifts that dont follow a pattern)
     available_shifts = {}
     for trooper_name in trooper_names:
+        # print(trooper_name, len([duty for duty in timetable if duty is None]))
+        # TODO: Generate a better way to do this
         # if the trooper is stayout and there is no pre assigned slots for the trooper, confirm should have afternoon shift
         if troopers[trooper_name]['status'] == 'stay-out' and len([duty for duty in timetable if duty is None]) == 0:
             available_shifts[trooper_name] = []
@@ -542,12 +550,13 @@ def or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_bl
 
             timing = duty_timings[t]
 
-            # Assign no slot for None values in timetable
-            if timetable[trooper][t] is None:
+            # Assign no slot for None values in timetable AND custom roles that are not counted in hours (basically like a None block)
+            print(timetable[trooper][t], role_is_custom_and_not_counted(roles, timetable[trooper][t]))
+            if timetable[trooper][t] is None or role_is_custom_and_not_counted(roles, timetable[trooper][t]):
+                # print(timetable[trooper][t])
                 model.add(duties[(p, t)] == 0)
 
             # Mark slot as taken if filled with anything else
-            # TODO: 
             elif timetable[trooper][t] != '':
                 model.add(duties[(p, t)] == 1)
         
@@ -1278,7 +1287,7 @@ def main_scheduling():
 
     print_timetable(timetable, duty_timings)
 
-    available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
+    available_shifts = find_all_available_shifts(timetable, duty_timings, troopers, roles)
     # pprint.pprint(available_shifts)
 
     shift_distribution = determine_shift_distribution(troopers)

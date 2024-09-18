@@ -307,7 +307,7 @@ async function loadPage() {
 
 
 
-
+// FOR EDIT ROLES PAGE
 document.addEventListener('DOMContentLoaded', function() {
     const addRoleForm = document.querySelector('.add-role-form');
     roleFormOnSubmit('add', addRoleForm);
@@ -315,3 +315,4 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPage();
     saveRoleTiming(addRoleForm);
 })
+
