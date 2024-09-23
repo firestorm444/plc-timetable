@@ -286,7 +286,7 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
     # from those that can do both morning and afternoon
     if len(unique_morning) < num_morning - len(final_shifts['morning']):
         num_troopers_to_add = num_morning - len(final_shifts['morning']) - len(unique_morning)
-        troopers_to_add = set(np.random.choice(list(choice_of_morning_or_afternoon), size=num_troopers_to_add, replace=False))
+        troopers_to_add = set(np.random.choice(list(choice_of_morning_or_afternoon), size=num_troopers_to_add, replace=False).tolist())
 
         choice_of_morning_or_afternoon = choice_of_morning_or_afternoon - troopers_to_add
         unique_morning.update(troopers_to_add)
@@ -296,7 +296,7 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
     elif len(unique_morning) >= num_morning - len(final_shifts['morning']):
         trooper_pool = choice_of_morning_or_afternoon
         trooper_pool.update(unique_morning)
-        morning_shift = set(np.random.choice(list(trooper_pool), size=num_morning - len(final_shifts['morning']) , replace=False))
+        morning_shift = set(np.random.choice(list(trooper_pool), size=num_morning - len(final_shifts['morning']) , replace=False).tolist())
         final_shifts['morning'].update(morning_shift)
 
         choice_of_morning_or_afternoon = choice_of_morning_or_afternoon - morning_shift
@@ -305,7 +305,7 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
     # Similar logic is applied for afternoon shift
     if len(unique_afternoon) < num_afternoon - len(final_shifts['afternoon']):
         num_troopers_to_add = num_afternoon - len(final_shifts['afternoon']) - len(unique_afternoon)
-        troopers_to_add = set(np.random.choice(list(choice_of_morning_or_afternoon), size=num_troopers_to_add, replace=False))
+        troopers_to_add = set(np.random.choice(list(choice_of_morning_or_afternoon), size=num_troopers_to_add, replace=False).tolist())
         
         choice_of_morning_or_afternoon = choice_of_morning_or_afternoon - troopers_to_add
         unique_afternoon.update(troopers_to_add)
@@ -316,7 +316,7 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
     elif len(unique_afternoon) >= num_afternoon - len(final_shifts['afternoon']):
         trooper_pool = choice_of_morning_or_afternoon
         trooper_pool.update(unique_afternoon)
-        afternoon_shift = set(np.random.choice(list(trooper_pool), size=num_afternoon - len(final_shifts['afternoon']), replace=False))
+        afternoon_shift = set(np.random.choice(list(trooper_pool), size=num_afternoon - len(final_shifts['afternoon']), replace=False).tolist())
         final_shifts['afternoon'].update(afternoon_shift)
 
         choice_of_morning_or_afternoon = choice_of_morning_or_afternoon - afternoon_shift
@@ -327,7 +327,8 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
     
     for shift_type in final_shifts:
         final_shifts[shift_type] = list(final_shifts[shift_type])
-        
+    
+    pprint.pprint(final_shifts)
     return final_shifts
 
 
@@ -441,12 +442,14 @@ def get_vacant_roles_for_timeslot(timeslot, roles, duty_timings, timetable):
 
 
 
-def generate_duty_hours(troopers, duty_timings, shift_dict, roles, timetable):
+def generate_duty_hours(troopers, duty_timings, shift_dict_to_copy, roles, timetable):
     '''
     Adds duty hours to each trooper in the troopers dict, with reference to the
     shift type. If the person is doing afternoon shift then give more hours to 
     the 
     '''
+    shift_dict = deepcopy(shift_dict_to_copy)
+
     # Organising the afternoon shift
     afternoon_troopers = shift_dict['afternoon']
     random.shuffle(afternoon_troopers)
@@ -462,6 +465,7 @@ def generate_duty_hours(troopers, duty_timings, shift_dict, roles, timetable):
     # (more technically, if current_trooper_hours + potential_trooper_hours < min_hours). 
     # For these troopers, fix their hours, and run the compute_hour_distribution function again, 
     # now with n less troopers, and determine the total number of hours for the other troopers
+    # by subtracting their fixed hours from the total
     for trooper_name, trooper_duties in timetable.items():
         current_trooper_hours = 0
         potential_trooper_hours = 0
@@ -476,25 +480,34 @@ def generate_duty_hours(troopers, duty_timings, shift_dict, roles, timetable):
                 current_trooper_hours += 1
 
         # For troopers exceeding max hours OR troopers that have potential hours of below the minimum hours
+        above_hours_condition = current_trooper_hours >= max_hours
+        below_hours_condition = current_trooper_hours + potential_trooper_hours <= min_hours
 
-        if current_trooper_hours >= max_hours:
-            print(trooper_name, 'a')
-            troopers[trooper_name]['assigned_hours'] = current_trooper_hours
+        if above_hours_condition or below_hours_condition:
+            if above_hours_condition:
+                assigned_hours = current_trooper_hours
+            elif below_hours_condition:
+                assigned_hours = current_trooper_hours + potential_trooper_hours
+            
+            troopers[trooper_name]['assigned_hours'] = assigned_hours
             temp_trooper_names.remove(trooper_name)
-            total_hours -= current_trooper_hours
-        
-        elif current_trooper_hours + potential_trooper_hours <= min_hours:
-            print(trooper_name, 'b')
-            troopers[trooper_name]['assigned_hours'] = current_trooper_hours + potential_trooper_hours
-            temp_trooper_names.remove(trooper_name)
-            total_hours -= current_trooper_hours + potential_trooper_hours
-        
+            total_hours -= assigned_hours
+
+            #TODO: Edit this (its messy)
+            # Remove the trooper who is identified earlier from shift dict 
+            # (since its no longer a consideration for allocating hours based on shift)
+            for shift in shift_dict:
+                shift_troopers = shift_dict[shift]
+                if trooper_name in shift_troopers:
+                    shift_troopers.remove(trooper_name)
+            
+            pprint.pprint(shift_dict)
+
         # print(trooper_name, current_trooper_hours, potential_trooper_hours)
 
-    print(total_hours)
-    print(temp_trooper_names)
+        
     hour_distribution = compute_hour_distribution(len(temp_trooper_names), total_hours)
-
+    print(total_hours, hour_distribution)
     
     # Recall hour distribution is like [(5,12), (6,1)]
     # Give afternoon troopers longer duty first, then morning troopers
@@ -513,10 +526,8 @@ def generate_duty_hours(troopers, duty_timings, shift_dict, roles, timetable):
                 index2 = index - len(shift_dict['random'])
                 long_duty_trooper = shift_dict['morning'][index2]
 
-        #TODO: Edit this (its messy)    
-        if long_duty_trooper in temp_trooper_names:
-            troopers[long_duty_trooper]['assigned_hours'] = hour_distribution[1][0]
-            temp_trooper_names.remove(long_duty_trooper)
+        troopers[long_duty_trooper]['assigned_hours'] = hour_distribution[1][0]
+        temp_trooper_names.remove(long_duty_trooper)
 
     for trooper in temp_trooper_names:
         troopers[trooper]['assigned_hours'] = hour_distribution[0][0]
