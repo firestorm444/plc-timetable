@@ -268,7 +268,7 @@ roles = [
     {
         'name': 'MR',
         'timing': 'all-day',
-        'color': '#f4cccc',
+        'color': '#999999',
         'is_standing': False,
         'is_counted_in_hours': False,
         'is_custom': True
@@ -276,7 +276,7 @@ roles = [
     {
         'name': 'MA',
         'timing': 'all-day',
-        'color': '#f4cccc',
+        'color': '#999999',
         'is_standing': False,
         'is_counted_in_hours': False,
         'is_custom': True
@@ -420,7 +420,7 @@ def get_default_parameters():
         'shift_distribution': default_shift_distribution,
         'timetable_date': timetable_date.isoformat(),
         'trooper_keys': list(troopers.keys()),
-        'total_hours': compute_hours(duty_timings, troopers, roles)[0],
+        'total_hours': compute_total_hours(roles, duty_timings),
     }
 
 
@@ -529,7 +529,7 @@ def assign_shifts_and_hours_for_calendar(eventsJson):
     timetable = convert_calendar_events_to_timetable(eventsJson)
     available_shifts = find_all_available_shifts(timetable, duty_timings, troopers, roles)
     allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
-    troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles)
+    troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles, timetable)
 
     hours_list = []
     for value in troopers.values():

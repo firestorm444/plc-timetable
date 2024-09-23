@@ -54,24 +54,32 @@ def role_is_custom_and_not_counted(roles_list, value):
 class TimetableInputError(Exception):
     pass
 
-def compute_hours(duty_timings, troopers, roles):
+# TODO: Add timetable as a parameter
+def compute_total_hours(roles, duty_timings):
+    total_hours = 0
+    for role in roles:
+        if role['is_counted_in_hours']:
+            if not role['is_custom']:
+                if role['timing'] == "all-day":
+                    total_hours += len(duty_timings)
+                else:
+                    # TODO: make it more flexible - include actual hours
+                    total_hours += len(role['timing'])
+            else:
+                # TODO: add for custom duties that are counted in hours (go thru the timetable and find)
+                pass
+    
+    return total_hours
+
+# TODO: Link to timetable (custom duties that are counted in hours)
+def compute_hour_distribution(num_troopers, total_hours):
     '''
     Compute the number of hours for duty and its distribution.
     For instance, if there are 66 hours of duty to be compled with 13 troopers,
     the hour distribution would be 12 troopers doing 5 hours and 1 trooper
     doing 6 hours.
     '''
-    total_hours = 0
-    num_troopers = len(troopers)
-    for role in roles:
-        if role['is_counted_in_hours']:
-            if role['timing'] == "all-day":
-                total_hours += len(duty_timings)
-            else:
-                # TODO: make it more flexible - include actual hours
-                total_hours += len(role['timing'])
-        
-    average_hours = total_hours/len(troopers)
+    average_hours = total_hours/num_troopers
     
     min_hours = math.floor(average_hours)
     max_hours = math.ceil(average_hours)
@@ -96,7 +104,7 @@ def compute_hours(duty_timings, troopers, roles):
         # essentially --> [[min_hours, result[0]], [max_hours, result[1]]]
         hour_distribution = list(zip([min_hours, max_hours], result))
 
-    return total_hours, average_hours, hour_distribution
+    return hour_distribution
 
 
 def print_timetable(timetable, duty_timings):
@@ -264,9 +272,10 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
 
     print(unique_morning, unique_afternoon, choice_of_morning_or_afternoon)
 
+    # TODO: Fix the shift overlap
     # if the sum of the difference between the needed and actual for both morning and afternoon is smaller than intersection, raise an error
-    if num_morning>len(unique_morning) and num_afternoon>len(unique_afternoon) and (num_morning - len(unique_morning)) + (num_afternoon - len(unique_afternoon)) > len(choice_of_morning_or_afternoon):
-        raise Exception('Unable to allocate shifts due to conflicts (requires _ morning, _afternoon to be available)')
+    # if num_morning>len(unique_morning) and num_afternoon>len(unique_afternoon) and (num_morning - len(unique_morning)) + (num_afternoon - len(unique_afternoon)) > len(choice_of_morning_or_afternoon):
+    #     raise Exception('Unable to allocate shifts due to conflicts (requires _ morning, _afternoon to be available)')
 
     # To visualise the following code, draw a venn diagram with morning, afternoon 
     # and intersection being troopers that can do both shifts
@@ -432,7 +441,7 @@ def get_vacant_roles_for_timeslot(timeslot, roles, duty_timings, timetable):
 
 
 
-def generate_duty_hours(troopers, duty_timings, shift_dict, roles):
+def generate_duty_hours(troopers, duty_timings, shift_dict, roles, timetable):
     '''
     Adds duty hours to each trooper in the troopers dict, with reference to the
     shift type. If the person is doing afternoon shift then give more hours to 
@@ -442,11 +451,54 @@ def generate_duty_hours(troopers, duty_timings, shift_dict, roles):
     afternoon_troopers = shift_dict['afternoon']
     random.shuffle(afternoon_troopers)
 
-    total_hours, average_hours, hour_distribution = compute_hours(duty_timings, troopers, roles)
-    temp_troopers = list(troopers.keys())
+    total_hours = compute_total_hours(roles, duty_timings)
+    initial_hour_distribution = compute_hour_distribution(len(troopers), total_hours)
+    min_hours = initial_hour_distribution[0][0]
+    max_hours = initial_hour_distribution[1][0]
+
+    temp_trooper_names = set(troopers.keys())
+    # Determine the number of troopers, n, that have hours longer than max hours, 
+    # or troopers that have potential hours of below the minimum hours 
+    # (more technically, if current_trooper_hours + potential_trooper_hours < min_hours). 
+    # For these troopers, fix their hours, and run the compute_hour_distribution function again, 
+    # now with n less troopers, and determine the total number of hours for the other troopers
+    for trooper_name, trooper_duties in timetable.items():
+        current_trooper_hours = 0
+        potential_trooper_hours = 0
+        for duty_name in trooper_duties:
+            duty = find_role(roles, duty_name)
+            # For unallocated duties
+            if duty_name == '':
+                potential_trooper_hours += 1
+
+            # For chosen duties
+            elif duty_name == 'TODO' or (duty is not None and duty['is_counted_in_hours']):
+                current_trooper_hours += 1
+
+        # For troopers exceeding max hours OR troopers that have potential hours of below the minimum hours
+
+        if current_trooper_hours >= max_hours:
+            print(trooper_name, 'a')
+            troopers[trooper_name]['assigned_hours'] = current_trooper_hours
+            temp_trooper_names.remove(trooper_name)
+            total_hours -= current_trooper_hours
+        
+        elif current_trooper_hours + potential_trooper_hours <= min_hours:
+            print(trooper_name, 'b')
+            troopers[trooper_name]['assigned_hours'] = current_trooper_hours + potential_trooper_hours
+            temp_trooper_names.remove(trooper_name)
+            total_hours -= current_trooper_hours + potential_trooper_hours
+        
+        # print(trooper_name, current_trooper_hours, potential_trooper_hours)
+
+    print(total_hours)
+    print(temp_trooper_names)
+    hour_distribution = compute_hour_distribution(len(temp_trooper_names), total_hours)
+
+    
     # Recall hour distribution is like [(5,12), (6,1)]
     # Give afternoon troopers longer duty first, then morning troopers
-    print(hour_distribution)
+    # print(hour_distribution)
 
     # Recursive code to edit - basically you assign longer hours in the order: afternoon --> random --> morning
     # TODO: EDIT THIS CODE
@@ -461,14 +513,15 @@ def generate_duty_hours(troopers, duty_timings, shift_dict, roles):
                 index2 = index - len(shift_dict['random'])
                 long_duty_trooper = shift_dict['morning'][index2]
 
-            
-        
-        troopers[long_duty_trooper]['assigned_hours'] = hour_distribution[1][0]
-        temp_troopers.remove(long_duty_trooper)
+        #TODO: Edit this (its messy)    
+        if long_duty_trooper in temp_trooper_names:
+            troopers[long_duty_trooper]['assigned_hours'] = hour_distribution[1][0]
+            temp_trooper_names.remove(long_duty_trooper)
 
-    for trooper in temp_troopers:
+    for trooper in temp_trooper_names:
         troopers[trooper]['assigned_hours'] = hour_distribution[0][0]
 
+    pprint.pprint(troopers)
     return troopers
 
 
@@ -1281,9 +1334,9 @@ def main_scheduling():
     # troopers['aniq']['shift'] = 'random'
     # troopers['hakim']['shift'] = 'afternoon'
 
-
-    total_hours, average_hours, hour_distribution = compute_hours(duty_timings, troopers, roles)
-    print(compute_hours(duty_timings, troopers, roles))
+    # total_hours = compute_total_hours(roles, duty_timings)
+    # hour_distribution = compute_hour_distribution(len(troopers), total_hours)
+    # print(compute_hour_distribution(duty_timings, len(troopers), roles))
 
     print_timetable(timetable, duty_timings)
 
@@ -1295,7 +1348,7 @@ def main_scheduling():
     pprint.pprint(allocated_shifts)
     # allocated_shifts = json.loads(input('Enter the finalised shifts'))
 
-    troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles)
+    troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles, timetable)
     troopers = add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
 
     # troopers, allocated_shifts = or_tools_select_shifts(possible_shifts, troopers, shift_blocks)
