@@ -280,7 +280,7 @@ roles = [
         'is_standing': False,
         'is_counted_in_hours': False,
         'is_custom': True
-    }
+    },
 ]
 
 # roles_placeholders = {
@@ -588,8 +588,8 @@ def export_timetable(exportData):
     oc_filename = "timetables/" + generate_filename("OC", timetable_date)
     
 
-    create_excel(duty_filename, all_troopers, duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
-    create_excel(oc_filename, all_troopers, oc_duty_timetable, duty_timings, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
+    create_excel(duty_filename, all_troopers, duty_timetable, duty_timings, roles, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
+    create_excel(oc_filename, all_troopers, oc_duty_timetable, duty_timings, roles, flag_troopers, exportData['breakfast'], exportData['dinner'], exportData['lastEnsurer'], today=timetable_date)
     
     duty_path = os.path.abspath(duty_filename)
     oc_path = os.path.abspath(oc_filename)

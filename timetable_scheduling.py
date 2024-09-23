@@ -536,6 +536,7 @@ def generate_duty_hours(troopers, duty_timings, shift_dict_to_copy, roles, timet
     return troopers
 
 
+
 def assign_sentry_duty(troopers, timetable, roles):
     combat_troopers = []
     for trooper in troopers:
@@ -615,7 +616,7 @@ def or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_bl
             timing = duty_timings[t]
 
             # Assign no slot for None values in timetable AND custom roles that are not counted in hours (basically like a None block)
-            print(timetable[trooper][t], role_is_custom_and_not_counted(roles, timetable[trooper][t]))
+            # print(timetable[trooper][t], role_is_custom_and_not_counted(roles, timetable[trooper][t]))
             if timetable[trooper][t] is None or role_is_custom_and_not_counted(roles, timetable[trooper][t]):
                 # print(timetable[trooper][t])
                 model.add(duties[(p, t)] == 0)
@@ -922,7 +923,7 @@ def generate_filename(timetable_type, timetable_date):
         return f"Normal Week of {previous_monday}.xlsx"
 
 
-def create_excel(filename, all_troopers, timetable, duty_timings, flag_troopers, breakfast, dinner, last_ensurer, today=datetime.date.today() + datetime.timedelta(days=1)):
+def create_excel(filename, all_troopers, timetable, duty_timings, roles, flag_troopers, breakfast, dinner, last_ensurer, today=datetime.date.today() + datetime.timedelta(days=1)):
     # Convert all None to empty string
     for trooper_name, duties in timetable.items():
         for i in range(len(duties)):
@@ -941,20 +942,14 @@ def create_excel(filename, all_troopers, timetable, duty_timings, flag_troopers,
     cell_format_dict = {'bold': True, 'italic': True, 'font_name': 'Arial', 'align': 'center'}
     merged_format_dict = {'bold': True, 'italic': True, 'font_name': 'Arial', 'align': 'center', 'font_size': 10}
 
+
     colors = {
         'first_row': '#fce5cd',
-        'out': '#ff9900',
-        'in': '#ffff00',
-        'x-ray': '#00ffff',
-        'desk': '#00ff00',
-        'SCA1': '#ff00ff',
-        'SCA2': '#ff00ff',
-        'SCA3': '#ff00ff',
-        'SCA4': '#ff00ff',
-        'PAC': '#f4cccc',
-        'sentry': '#ff0000',
-        'absent': '#999999'
+        'absent': '#999999',
     }
+
+    for role in roles:
+        colors[role['name']] = role['color']
 
     colors_format = {}
     for key in colors:
@@ -1068,7 +1063,6 @@ def create_excel(filename, all_troopers, timetable, duty_timings, flag_troopers,
 
     # STYLING BOTTOM ROW
     # flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
-
     flag_text = 'FLAG:' + ' // '.join([trooper_name.upper() for trooper_name in flag_troopers])
 
 
@@ -1382,7 +1376,7 @@ def main_scheduling():
     flag_troopers, breakfast, dinner, last_ensurer = allocate_miscellaneous_roles(all_troopers, timetable)
     print(breakfast, dinner, last_ensurer)
 
-    # create_excel('trial.xlsx', all_troopers, timetable, duty_timings, flag_troopers, breakfast, dinner, last_ensurer)
+    # create_excel('trial.xlsx', all_troopers, timetable, duty_timings, roles, flag_troopers, breakfast, dinner, last_ensurer)
 
 
 if __name__ == "__main__":
