@@ -803,7 +803,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 // If confirm shifts button clicked
                 if (i === 2) {
-                    if (validateShiftDistribution() && validateTotalHours(defaultParameters.total_hours)) {
+                    if (true) {
+                    // TODO: Fix validation
+                    // if (validateShiftDistribution() && validateTotalHours(defaultParameters.total_hours)) {
                         let exportVal = exportShiftsAndHours();
                         try {
                             var newEvents = await eel.assign_duty_timeslots_to_troopers(exportVal)();

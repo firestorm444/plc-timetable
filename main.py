@@ -281,6 +281,14 @@ roles = [
         'is_counted_in_hours': False,
         'is_custom': True
     },
+    {
+        'name': 'prowl',
+        'timing': 'all-day',
+        'color': '#999999',
+        'is_standing': True,
+        'is_counted_in_hours': True,
+        'is_custom': True
+    },
 ]
 
 # roles_placeholders = {
