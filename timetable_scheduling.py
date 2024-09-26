@@ -10,6 +10,7 @@ import datetime
 import json
 from dateutil.relativedelta import relativedelta, MO
 from pathlib import Path
+from itertools import product
 
 import itertools
 from ortools.sat.python import cp_model
@@ -145,7 +146,7 @@ def print_timetable(timetable, duty_timings):
     # if all falls in morning ==> morning
     # if all falls in afternoon ==> afternoon (this and one above are ifs not elifs)
 
-def find_all_available_shifts(timetable, duty_timings, troopers, roles, min_hours=5):
+def find_all_available_shifts(timetable, duty_timings, troopers, roles, shift_blocks, min_hours=5):
     '''
     Analyses the timetable and assigns shifts for different troopers
     To assign 4 morning, 4 afternoon, 2 late morning, rest random
@@ -154,11 +155,11 @@ def find_all_available_shifts(timetable, duty_timings, troopers, roles, min_hour
     stayout: either late afternoon/afternoon
     '''
     # TODO: make this customisable
-    shift_blocks = {
-        'morning': [time(6), time(12)],
-        'late-morning': [time(8), time(14)],
-        'afternoon': [time(10), time(17)]
-    }
+    # shift_blocks = {
+    #     'morning': [time(6), time(12)],
+    #     'late-morning': [time(8), time(14)],
+    #     'afternoon': [time(10), time(17)]
+    # }
 
     def check_if_all_in_given_shift(shift_name, individual_timetable, shift_blocks=shift_blocks, duty_timings=duty_timings):
         '''
@@ -242,7 +243,9 @@ def find_all_available_shifts(timetable, duty_timings, troopers, roles, min_hour
 
 
 def determine_shift_distribution(troopers):
-    if len(troopers) == 10:
+    if len(troopers) == 9:
+        num_morning, num_afternoon, num_random = 3, 2, 4
+    elif len(troopers) == 10:
         num_morning, num_afternoon, num_random = 4, 3, 3
     elif len(troopers) == 11:
         num_morning, num_afternoon, num_random = 4, 4, 3
@@ -253,6 +256,49 @@ def determine_shift_distribution(troopers):
         num_random = len(troopers) - 10
     
     return num_morning, num_afternoon, num_random
+
+
+def determine_shift_blocks(min_hours, max_hours, duty_timings, leeway=2, min_leeway=0, max_leeway=3, mode="static", troopers={}, roles=[], timetable={}):
+    '''
+    Static mode just makes the shift allocation based on the boundaries of the shift. These boundaries are determined by the 
+    minimum and maximum hours, and the leeway set. Static mode is useful before shift generation, as a rough guage of when
+    the start and end times of the shift are to determine whether the trooper can take on a certain shift or not.
+
+    Dynamic mode tries to make the schedule compact by minimising gaps by running the or tools allocation earlier to determine
+    the best possible start/end times
+    
+    '''
+    shift_blocks = {
+        'morning': [duty_timings[0], None],
+        'afternoon': [None, duty_timings[-1]]
+    }
+
+    if mode == 'static':
+        shift_blocks['morning'][1] = duty_timings[min_hours-1+leeway]
+        shift_blocks['afternoon'][0] = duty_timings[-abs(max_hours+leeway)]
+
+        return shift_blocks
+
+    elif mode == 'dynamic':
+        permutations = list(product(range(min_leeway, max_leeway+1), repeat=2))
+        permutations.sort(key=lambda row: sum(row))
+        solution_found = False
+        for permutation in permutations:
+            timetable_copy = deepcopy(timetable)
+
+            leeway_morning, leeway_afternoon = permutation
+            shift_blocks['morning'][1] = duty_timings[min_hours-1+leeway_morning]
+            shift_blocks['afternoon'][0] = duty_timings[-abs(max_hours+leeway_afternoon)]
+
+            try:
+                timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable_copy, roles, shift_blocks)
+                solution_found = True
+            except TimetableInputError:
+                pass
+            # print(f'solution found: {solution_found}, shift_blocks: {shift_blocks}, permutation: {permutation}')
+        
+        # print(f'FINAL: solution found: {solution_found}, shift_blocks: {shift_blocks}')
+        return solution_found, shift_blocks
 
 
 def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
@@ -284,7 +330,7 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
 
     choice_of_morning_or_afternoon = shift_dict['morning'].intersection(shift_dict['afternoon'])
 
-    print(unique_morning, unique_afternoon, choice_of_morning_or_afternoon)
+    # print(unique_morning, unique_afternoon, choice_of_morning_or_afternoon)
 
     # TODO: Fix the shift overlap
     # if the sum of the difference between the needed and actual for both morning and afternoon is smaller than intersection, raise an error
@@ -342,7 +388,7 @@ def select_shifts(possible_shifts, troopers, shift_blocks, shift_distribution):
     for shift_type in final_shifts:
         final_shifts[shift_type] = list(final_shifts[shift_type])
     
-    pprint.pprint(final_shifts)
+    # pprint.pprint(final_shifts)
     return final_shifts
 
 
@@ -537,7 +583,7 @@ def generate_duty_hours(troopers, duty_timings, shift_dict_to_copy, roles, timet
                 if trooper_name in shift_troopers:
                     shift_troopers.remove(trooper_name)
             
-            pprint.pprint(shift_dict)
+            # pprint.pprint(shift_dict)
 
         # print(trooper_name, current_trooper_hours, potential_trooper_hours)
 
@@ -568,7 +614,7 @@ def generate_duty_hours(troopers, duty_timings, shift_dict_to_copy, roles, timet
     for trooper in temp_trooper_names:
         troopers[trooper]['assigned_hours'] = hour_distribution[0][0]
 
-    pprint.pprint(troopers)
+    # pprint.pprint(troopers)
     return troopers
 
 
@@ -1389,7 +1435,7 @@ def main_scheduling():
 
     print_timetable(timetable, duty_timings)
 
-    available_shifts = find_all_available_shifts(timetable, duty_timings, troopers, roles)
+    available_shifts = find_all_available_shifts(timetable, duty_timings, troopers, roles, shift_blocks)
     # pprint.pprint(available_shifts)
 
     shift_distribution = determine_shift_distribution(troopers)
