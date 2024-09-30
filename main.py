@@ -352,6 +352,18 @@ eel.init('web')
 def generate_roles_dict():
     pass
 
+def shift_blocks_to_json(shift_blocks):
+    shift_block_iso = {}
+    for key, timings in shift_blocks.items():
+        # Add 1 hour to the morning ending time since the duty timings represent the start of the duty timing
+        if key == 'morning':
+            timings[1] = calculate_time(timings[1], datetime.timedelta(hours=1))
+        
+        shift_block_iso[key] = [timing.strftime('%H:%M:%S') for timing in timings]
+    
+    return shift_block_iso
+
+
 @eel.expose
 def generate_global_timetable_variables():
     global all_troopers, troopers, default_shift_distribution, shift_distribution, blank_timetable, shift_blocks
@@ -423,10 +435,7 @@ def convert_troopers_to_calendar_resources():
 
 @eel.expose
 def get_default_parameters():
-    shift_block_iso = {}
-    for key, timings in shift_blocks.items():
-        shift_block_iso[key] = [timing.strftime('%H:%M:%S') for timing in timings]
-    
+    shift_block_iso = shift_blocks_to_json(shift_blocks)
     return {
         'roles': combined_roles,
         'shift_blocks': shift_block_iso,
@@ -553,20 +562,25 @@ def assign_shifts_and_hours_for_calendar(eventsJson):
 
     # TODO: Add dynamic shift block back to the front end for user to validate + error message if cannot find solution
     # TODO: Steamline the shift blocks throughout both python files, very messy
-    solution_found, dynamic_shift_block = determine_shift_blocks(hour_distribution[0][0], hour_distribution[1][0], duty_timings, mode="dynamic", troopers=troopers, roles=roles, timetable=timetable)
-    if not solution_found:
-        dynamic_shift_block = determine_shift_blocks(hour_distribution[0][0], hour_distribution[1][0], duty_timings, mode="static", leeway=1)
+    solution_found, dynamic_shift_blocks = determine_shift_blocks(hour_distribution[0][0], hour_distribution[1][0], duty_timings, mode="dynamic", troopers=troopers, roles=roles, timetable=timetable)
 
+    # Change the default shift blocks to one where theres more leeway (2 instead of 1)
+    if not solution_found:
+        dynamic_shift_blocks = determine_shift_blocks(hour_distribution[0][0], hour_distribution[1][0], duty_timings, leeway=2)
+
+    # Get the hours each trooper is doing from the troopers dictionary, added using generate_duty_hours
     hours_list = []
     for value in troopers.values():
         hours_list.append(value['assigned_hours'])
 
-    print(hours_list)
     return {
         'hoursList': hours_list,
         'availableShifts': available_shifts,
-        'allocatedShifts': allocated_shifts
+        'allocatedShifts': allocated_shifts,
+        'dynamicShiftFound': solution_found,
+        'dynamicShiftBlocksISO': shift_blocks_to_json(dynamic_shift_blocks)  # Convert the shift_blocks to their isoformat
     }
+
 
 @eel.expose
 def assign_duty_timeslots_to_troopers(exportVal):
@@ -580,8 +594,7 @@ def assign_duty_timeslots_to_troopers(exportVal):
         i += 1
 
     morning_time = time.fromisoformat(exportVal['morningEndingTime'])
-    morning_datetime = datetime.datetime.combine(datetime.date.today(), morning_time) - datetime.timedelta(hours=1)
-    shift_blocks['morning'][1] = datetime.time(hour=morning_datetime.hour, minute=morning_datetime.minute)
+    shift_blocks['morning'][1] = calculate_time(morning_time, datetime.timedelta(hours=-1))
     shift_blocks['afternoon'][0] = time.fromisoformat(exportVal['afternoonStartingTime'])
     print(shift_blocks)
 

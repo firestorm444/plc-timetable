@@ -778,7 +778,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // If confirm custom duties button clicked
                 if (i === 1) {
                     try {
-                        console.log('before');
                         var result = await eel.assign_shifts_and_hours_for_calendar(getCalendarEventsForTimetable())();
                         console.log(result);
                         addAllAvailableShifts(result.availableShifts, trooperKeys, calendar);
@@ -794,6 +793,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                         shiftElements.forEach(element => {
                             element.addEventListener('change', validateShiftDistribution)
                         });
+
+                        // Add dynamic shift generated
+                        if (result.dynamicShiftFound) {
+                            console.log(result.dynamicShiftBlocksISO)
+                            morningEndingTime.value = result.dynamicShiftBlocksISO.morning[1];
+                            afternoonStartingTime.value = result.dynamicShiftBlocksISO.afternoon[0];
+                        } else {
+                            displayTimetableFlashMessage('error', 'Unable to find a valid set of start/end times. Please change 1 or more shifts to random')
+                        }
 
                         swapShifts(trooperKeys);
                     } catch (error) {

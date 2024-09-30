@@ -42,6 +42,23 @@ Notes from studying the timetables:
 - Random
 Aim for one large break between duties so not scattered
 '''
+def calculate_time(start_time, timedelta):
+    '''
+    Computes a time by adding the decided timedelta to the starttime and returns the final time
+
+    Arguments:
+        start_time(datetime.time): The starting time
+        timedelta(datetime.timedelta): The amount of time to be added to the starting time
+    
+    Returns:
+        end_time(datetime.time): The ending time
+    '''
+    starting_datetime = datetime.datetime.combine(datetime.date.today(), start_time)
+    ending_datetime = starting_datetime + timedelta
+
+    return ending_datetime.time()
+
+
 def find_role(roles_list, value, filter_by='name'):
     return next((item for item in roles_list if item[filter_by] == value), None)
 
@@ -258,7 +275,7 @@ def determine_shift_distribution(troopers):
     return num_morning, num_afternoon, num_random
 
 
-def determine_shift_blocks(min_hours, max_hours, duty_timings, leeway=2, min_leeway=0, max_leeway=3, mode="static", troopers={}, roles=[], timetable={}):
+def determine_shift_blocks(min_hours, max_hours, duty_timings, leeway=2, min_leeway=0, max_leeway=2, mode="static", troopers={}, roles=[], timetable={}):
     '''
     Static mode just makes the shift allocation based on the boundaries of the shift. These boundaries are determined by the 
     minimum and maximum hours, and the leeway set. Static mode is useful before shift generation, as a rough guage of when
@@ -293,11 +310,12 @@ def determine_shift_blocks(min_hours, max_hours, duty_timings, leeway=2, min_lee
             try:
                 timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable_copy, roles, shift_blocks)
                 solution_found = True
+                break
             except TimetableInputError:
                 pass
-            # print(f'solution found: {solution_found}, shift_blocks: {shift_blocks}, permutation: {permutation}')
+            print(f'solution found: {solution_found}, shift_blocks: {shift_blocks}, permutation: {permutation}')
         
-        # print(f'FINAL: solution found: {solution_found}, shift_blocks: {shift_blocks}')
+        print(f'FINAL: solution found: {solution_found}, shift_blocks: {shift_blocks}')
         return solution_found, shift_blocks
 
 
