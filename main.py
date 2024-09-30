@@ -322,7 +322,7 @@ roles_placeholders = [
 # }
 
 timetable_date = datetime.date.today() + datetime.timedelta(days=1)
-
+stayout_earliest_starting_time = time(9)
 # default_shift_distribution = determine_shift_distribution(troopers)
 # shift_distribution = default_shift_distribution
 
@@ -339,10 +339,10 @@ combined_roles.extend(roles_placeholders)
 # timetable = assign_sentry_duty(troopers, blank_timetable, roles)
 # timetable['hilmi'][0:6] = ['desk', 'desk', 'out', 'x-ray', 'out', 'desk']
 # available_shifts = find_all_available_shifts(timetable, duty_timings, troopers)
-# allocated_shifts = select_shifts(available_shifts, troopers, shift_blocks, shift_distribution)
+# allocated_shifts = select_shifts(available_shifts, troopers, shift_distribution)
 # troopers = generate_duty_hours(troopers, timetable, duty_timings, allocated_shifts, roles)
 # troopers = add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
-# timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
+# timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks, stayout_earliest_starting_time)
 # timetable = or_tools_role_assignment(troopers, duty_timings, timetable, roles, 3)
 # print_timetable(timetable, duty_timings)
 
@@ -556,13 +556,14 @@ def assign_shifts_and_hours_for_calendar(eventsJson):
     rough_shift_blocks = determine_shift_blocks(hour_distribution[0][0], hour_distribution[1][0], duty_timings, mode="static")
 
     available_shifts = find_all_available_shifts(timetable, duty_timings, troopers, roles, rough_shift_blocks)
-    allocated_shifts = select_shifts(available_shifts, troopers, rough_shift_blocks, shift_distribution)
+    allocated_shifts = select_shifts(available_shifts, troopers, shift_distribution)
     troopers = add_allocated_shift_to_troopers_dict(allocated_shifts, troopers)
     troopers = generate_duty_hours(troopers, duty_timings, allocated_shifts, roles, timetable)
 
-    # TODO: Add dynamic shift block back to the front end for user to validate + error message if cannot find solution
-    # TODO: Steamline the shift blocks throughout both python files, very messy
-    solution_found, dynamic_shift_blocks = determine_shift_blocks(hour_distribution[0][0], hour_distribution[1][0], duty_timings, mode="dynamic", troopers=troopers, roles=roles, timetable=timetable)
+    # Generate dynamic shift block back to the front end for user to validate
+    # If no solution is found, the default shift block is expanded such that theres more leeway (leeway of 2)
+    # And on the front end, the user is prompted to change more shifts to random
+    solution_found, dynamic_shift_blocks = determine_shift_blocks(hour_distribution[0][0], hour_distribution[1][0], duty_timings, mode="dynamic", troopers=troopers, roles=roles, timetable=timetable, stayout_earliest_starting_time=stayout_earliest_starting_time)
 
     # Change the default shift blocks to one where theres more leeway (2 instead of 1)
     if not solution_found:
@@ -598,7 +599,7 @@ def assign_duty_timeslots_to_troopers(exportVal):
     shift_blocks['afternoon'][0] = time.fromisoformat(exportVal['afternoonStartingTime'])
     print(shift_blocks)
 
-    timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks)
+    timetable = or_tools_shift_scheduling(troopers, duty_timings, timetable, roles, shift_blocks, stayout_earliest_starting_time)
 
     return convert_timetable_to_calendar_events(timetable)
 
