@@ -1,7 +1,3 @@
-# from google.oauth2 import service_account
-# from googleapiclient.discovery import build
-# from googleapiclient.errors import HttpError
-# CAN USE https://github.com/robin900/gspread-formatting
 import gspread
 import gspread.utils
 from gspread.exceptions import WorksheetNotFound
@@ -13,24 +9,7 @@ from copy import deepcopy
 import string
 from timetable_scheduling import find_role, calculate_time
 
-SERVICE_ACCOUNT_FILE = 'credentials.json'
-GOOGLE_SHEETS_ID = "1kGvbilWF_TunCKBo_zMNe4szDR423923Iri0eE6quyY"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-RANGE_NAME = 'MON'
-
-# gc = gspread.service_account(filename='credentials.json', scopes=SCOPES)
-# sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1YTH68Mh-T0vgkv5ov0ifp3ybNhOkzVBLRe9INzhwcuo/edit?gid=0#gid=0")
-# worksheet = sh.worksheet('Sheet1')
-
-
-# fmt = CellFormat(
-#         horizontalAlignment='CENTER',
-#         textFormat=TextFormat(bold=True, italic=True, fontFamily='Arial', fontSize=10))
-
-# format_cell_range(worksheet, 'A1', fmt)
-
-# print(worksheet.get_all_values())
-
 
 def hex_to_rgb(hex):
   hex = hex.replace('#', '')
@@ -61,8 +40,6 @@ def add_update_request(acell_range, value, update_requests):
         "values": value
     }
     update_requests.append(request)
-
-
 
 
 def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, roles, flag_troopers, breakfast, dinner, last_ensurer, today=datetime.date.today() + datetime.timedelta(days=1)):
@@ -129,10 +106,6 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
             merged_cell_format.backgroundColor = Color(*converted_colors)
             colors_format[key] = merged_cell_format
 
-
-    # timings_cell_format: merged_cell_format_border
-    # trooper_name_cell_format: cell_format_border
-
     column_names = string.ascii_uppercase
     table_length = len(duty_timings) + 2
 
@@ -142,9 +115,7 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
         'requests': []
     }
     update_requests = []
-
     format_requests = []
-
 
 
     # Set column widths
@@ -162,34 +133,20 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
     format_requests.append(('A1', first_row_format))
     add_merge_request(to_acell_range(1, 1, 1, table_length), worksheet, merge_requests)
 
-    # worksheet.update_cell(1, 1, f'DUTY {today.strftime("%d%m%y %A")}'.upper())
-    # format_cell_range(worksheet, 'A1', first_row_format)
-    # worksheet.merge_cells(to_acell_range(1, 1, 1, table_length))
 
-    # # Add the timings
-    # # i+2 since the first column is empty and indexing starts from 1
+    # Add the timings
+    # i+2 since the first column is empty and indexing starts from 1
     duty_timings_str_list = [duty_timings[i].strftime('%H%M') + '-' + duty_timings2[i].strftime('%H%M') for i in range(len(duty_timings))]
     cell_range = to_acell_range(2, 2, 2, len(duty_timings) + 1)
-    print(cell_range)
-
     add_update_request(cell_range, [duty_timings_str_list], update_requests)
     format_requests.append((cell_range, merged_cell_format_border))
 
-    # worksheet.update([duty_timings_str_list], cell_range)
-    # format_cell_range(worksheet, cell_range, merged_cell_format_border)
-
-
-    # # Style the leftmost and rightmost square
+    # Style the leftmost and rightmost square
     format_requests.append(('A2', cell_format_border)) # Leftmost
-
-    # format_cell_range(worksheet, 'A2', cell_format_border) # Leftmost
 
     rightmost_cell = to_acell(2, table_length)
     add_update_request(rightmost_cell, [['HOURS']], update_requests)
     format_requests.append((rightmost_cell, colors_format['out'])) # Rightmost
-
-    # worksheet.update([['HOURS']], to_acell(2, table_length))
-    # format_cell_range(worksheet, to_acell(2, table_length), colors_format['out']) # Rightmost
 
     # Add the duties
     row = 3
@@ -202,9 +159,6 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
         # First column: name
         add_update_request(to_acell(row, col), [[trooper_name.upper()]], update_requests)
         format_requests.append((to_acell(row, col), cell_format_border))
-
-        # worksheet.update([[trooper_name.upper()]], to_acell(row, col))
-        # format_cell_range(worksheet, to_acell(row, col), cell_format_border)
 
         # Add duties for a present trooper
         if all_troopers[trooper_name]['present'] is True:
@@ -231,8 +185,6 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
                 # Write the duty to google sheets
                 add_update_request(to_acell(row, duty_index+2), [[duties[duty_index].upper()]], update_requests)
 
-                # worksheet.update([[duties[duty_index].upper()]], to_acell(row, duty_index+2))
-
                 # Merge same duties if theres consecutive duties
                 if merged_cell_length > 1:
                     merge_start = duty_index - merged_cell_length + 3
@@ -241,14 +193,10 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
                     add_merge_request(to_acell_range(row, merge_start, row, merge_end), worksheet, merge_requests)
                     format_requests.append((to_acell_range(row, merge_start, row, merge_end), colors_format[duties[duty_index]]))
 
-                    # worksheet.merge_cells(to_acell_range(row, merge_start, row, merge_end))
-                    # format_cell_range(worksheet, to_acell_range(row, merge_start, row, merge_end), colors_format[duties[duty_index]])
                 else:
-                    format_requests.append((to_acell(row, duty_index + 2), colors_format[duties[duty_index]]))
-                    
-                    # format_cell_range(worksheet, to_acell(row, duty_index + 2), colors_format[duties[duty_index]])
-                
+                    format_requests.append((to_acell(row, duty_index + 2), colors_format[duties[duty_index]]))   
         
+
                 duty_index += 1
 
             # Remove the random last element
@@ -263,30 +211,16 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
             add_merge_request(absent_range, worksheet, merge_requests)
             format_requests.append((absent_range, colors_format['absent']))
 
-            # worksheet.update([[all_troopers[trooper_name]['reason_for_absence']]], to_acell(row, 2))
-            # worksheet.merge_cells(absent_range)
-            # format_cell_range(worksheet, absent_range, colors_format['absent'])
-
         # Add last column: hours
         add_update_request(to_acell(row, table_length), [[str(num_hours)]], update_requests)
         format_requests.append((to_acell(row, table_length), colors_format['out']))
-        
-        # worksheet.update([[str(num_hours)]], to_acell(row, table_length))
-        # format_cell_range(worksheet, to_acell(row, table_length), colors_format['out'])
-    
-    #     worksheet.write(row, table_length-1, num_hours, colors_format['out'])
-
 
         # Add styling and progress to the next trooper for every trooper except the last
         if trooper_count <= len(all_troopers) - 1:
             # Add a cell with plain border for alternating rows (styling of the rows in between)
             row += 1
-
             format_requests.append((to_acell(row, 1), cell_format_border))
             format_requests.append((to_acell(row, table_length), colors_format['out']))
-
-            # format_cell_range(worksheet, to_acell(row, 1), cell_format_border)
-            # format_cell_range(worksheet, to_acell(row, table_length), colors_format['out'])
 
         # Go to the next row to continue printing out the next trooper duties
         row += 1
@@ -324,14 +258,6 @@ def upload_to_google_sheets(sheets_url, all_troopers, timetable, duty_timings, r
     add_update_request(to_acell(row, 4), [[dinner_text]], update_requests)
     add_merge_request(to_acell_range(row, 4, row+2, table_length-4), worksheet, merge_requests)
     format_requests.append((to_acell_range(row, 4, row+2, table_length-4), bottom_row_middle_cell_format))
-
-    # bottom_row_side_cell_format = workbook.add_format({'bold': True, 'italic': True, 'font_name': 'Arial', 'align': 'center', 'valign': 'bottom', 'fg_color': '#00ff00', 'border': 1})
-    # worksheet.merge_range(row, 0, row+2, 2, flag_text, bottom_row_side_cell_format)
-    # worksheet.merge_range(row, table_length-4, row+2, table_length-1, f'LAST ENSURER: {last_ensurer.upper()}', bottom_row_side_cell_format)
-
-    # bottom_row_middle_cell_format = workbook.add_format({'bold': True, 'italic': True, 'font_name': 'Arial', 'align': 'center', 'valign': 'bottom', 'font_color': '#ff0000', 'border': 1})
-    # worksheet.merge_range(row, 3, row+2, 9, f'BREAKFAST:{breakfast.upper()} // DINNER:{dinner.upper()}', bottom_row_middle_cell_format)
-    # workbook.close()
 
     # Batch update to reduce API calls
     try:
