@@ -314,7 +314,7 @@ def determine_shift_blocks(min_hours, max_hours, duty_timings, leeway=2, min_lee
         return solution_found, shift_blocks
 
 
-def select_shifts(possible_shifts, troopers, shift_distribution, stayout_afternoon_shift_probability=0.7):
+def select_shifts(possible_shifts, troopers, shift_distribution, stayout_afternoon_shift_probability=0.9):
     final_shifts = {
         'morning': set(),
         'afternoon': set(),
@@ -1040,8 +1040,7 @@ def create_excel(filename, all_troopers, timetable, duty_timings, roles, flag_tr
             if duties[i] is None:
                 timetable[trooper_name][i] = ''
 
-    # TODO
-    duty_timings2 = [time(x) for x in range(7, 19)]
+    duty_timings2 = [calculate_time(timing, datetime.timedelta(hours=1)) for timing in duty_timings]
     
     Path("timetables").mkdir(exist_ok=True)
     workbook = xlsxwriter.Workbook(filename)
@@ -1073,7 +1072,6 @@ def create_excel(filename, all_troopers, timetable, duty_timings, roles, flag_tr
             merged_cell_format.fg_color = colors[key]
             colors_format[key] = merged_cell_format
 
-    cell_format = workbook.add_format(cell_format_dict)
     timings_cell_format = workbook.add_format(merged_format_dict)
     trooper_name_cell_format = workbook.add_format(cell_format_dict)
     timings_cell_format.set_border()
@@ -1111,7 +1109,7 @@ def create_excel(filename, all_troopers, timetable, duty_timings, roles, flag_tr
     for trooper_name in all_troopers:
         trooper_count += 1
 
-        # First column: name
+        #TODO: First column: name
         worksheet.write(row, col, trooper_name.upper(), trooper_name_cell_format)
 
         # Add duties for a present trooper
@@ -1119,7 +1117,7 @@ def create_excel(filename, all_troopers, timetable, duty_timings, roles, flag_tr
             duties = timetable[trooper_name]
 
             # Last column: hours
-            num_hours = sum([1 for x in duties if x is not None and x != ''])
+            num_hours = sum([1 for x in duties if x is not None and x != '' and find_role(roles, x)['is_counted_in_hours']])
 
             # From 2nd to before last column: add duties
             duty_index = 0

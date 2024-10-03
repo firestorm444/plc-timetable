@@ -322,7 +322,7 @@ roles_placeholders = [
 # }
 
 timetable_date = datetime.date.today() + datetime.timedelta(days=1)
-stayout_earliest_starting_time = time(9)
+stayout_earliest_starting_time = time(8)
 # default_shift_distribution = determine_shift_distribution(troopers)
 # shift_distribution = default_shift_distribution
 
