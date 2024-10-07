@@ -10,6 +10,76 @@ import string
 from timetable_scheduling import find_role, calculate_time
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+DRIVE_SCOPE = ['https://www.googleapis.com/auth/drive']
+
+## CONNECTING TO DRIVE ATTEMPT
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+
+def google_drive_trial():
+    service_account_json_key = 'credentials.json'
+    credentials = service_account.Credentials.from_service_account_file(
+                              filename=service_account_json_key, 
+                              scopes=DRIVE_SCOPE)
+    try:
+        # create drive api client
+        service = build("drive", "v3", credentials=credentials)
+        parent_id = '1tpS3aASDqc8Qy6twty0U0VFBnwtBSKvt'
+        paths = ['2024', '10 October']
+        
+        for i in range(len(paths)):
+            print(parent_id, paths[i])
+            file = search_file(service, parent_id, paths[i])[0]
+            parent_id = file.get("id")
+        
+        # Get all the files in the last path
+        files = search_file(service, parent_id)
+        
+        for file in files:
+            # Process change
+            print(f'Found file: {file.get("name")}, {file.get("id")}')
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
+
+
+def search_file(service, parent_id, filename=None):
+    files = []
+    page_token = None
+    
+    query = f"'{parent_id}' in parents"
+    if filename is not None:
+        query += f' and name = "{filename}"'
+    
+    while True:
+        response = (
+            service.files()
+            .list(
+                q=query,
+                spaces="drive",
+                fields="nextPageToken, files(id, name)",
+                includeItemsFromAllDrives = True,
+                supportsAllDrives = True
+            )
+            .execute()
+        )
+
+        file = response.get("files", [])
+        for file in response.get("files", []):
+            # Process change
+            pass
+            # print(f'Found file: {file.get("name")}, {file.get("id")}')
+        files.extend(response.get("files", []))
+        page_token = response.get("nextPageToken", None)
+        if page_token is None:
+            break
+    
+    return files
+
+
 
 def hex_to_rgb(hex):
   hex = hex.replace('#', '')
@@ -368,8 +438,8 @@ def main():
     breakfast = 'hugo'
     dinner = 'hilmi'
     last_ensurer = 'dhruva'
-    upload_to_google_sheets('https://docs.google.com/spreadsheets/d/1YTH68Mh-T0vgkv5ov0ifp3ybNhOkzVBLRe9INzhwcuo/edit?gid=0#gid=0', trial_all_troopers, trial_timetable, duty_timings, roles, flag_troopers, breakfast, dinner, last_ensurer)
-
+    # upload_to_google_sheets('https://docs.google.com/spreadsheets/d/1YTH68Mh-T0vgkv5ov0ifp3ybNhOkzVBLRe9INzhwcuo/edit?gid=0#gid=0', trial_all_troopers, trial_timetable, duty_timings, roles, flag_troopers, breakfast, dinner, last_ensurer, today=datetime.date(2024, 10, 4))
+    google_drive_trial()
 
 if __name__ == "__main__":
     main()
